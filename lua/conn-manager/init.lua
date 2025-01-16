@@ -279,6 +279,7 @@ function M.add_folder()
   local new_node = Node.Node.new(true)
   new_node.config = {
     display_name = name,
+    ['type'] = 'folder',
   }
   node:add_child(new_node)
   M.refresh('add')
@@ -306,6 +307,7 @@ return {
 
   vim.keymap.set('n', '<C-s>', function()
     buffer_save_action(node, function(n, config)
+      config['type'] = 'terminal'
       local new_node = Node.new_node_from_conn({ config = config })
       n:add_child(new_node)
       M.refresh('add')

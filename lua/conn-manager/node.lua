@@ -126,7 +126,7 @@ function Node:render(indent)
 end
 
 function M.new_node_from_conn(conn)
-  local node = Node.new(#(conn.children or {}) > 0)
+  local node = Node.new(#(conn.children or {}) > 0 or conn.config.type == 'folder')
   --node.expanded = node.expandable and true or false
   node.config = conn.config
   for _, child in ipairs(conn.children or {}) do
