@@ -2,6 +2,7 @@ local Config = require('conn-manager.config')
 local Node = require('conn-manager.node')
 local Render = require('conn-manager.render')
 local Window = require('conn-manager.window')
+local Utils = require('conn-manager.utils')
 
 local M = {}
 
@@ -234,6 +235,56 @@ function M.remove()
     M.refresh(true)
     M.save_config()
   end
+end
+
+function M.add()
+  local node = get_node()
+  if not node or not node.expandable then
+    return
+  end
+  local bufnr, winid = Utils.create_scratch_floatwin('conn-manager')
+  local template = [[
+-- press <C-s> or <C-w><C-s> to save
+return {
+  display_name = '',
+  description = '',
+  computer_name = '', -- aka. hostname, also can be IP
+  port = 22,
+  username = '',
+  password = '',
+}]]
+  vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, vim.split(template, '\n', {}))
+  vim.api.nvim_set_option_value('filetype', 'lua', { buf = bufnr })
+  vim.api.nvim_set_option_value('buftype', 'nofile', { buf = bufnr })
+  vim.api.nvim_set_option_value('bufhidden', 'wipe', { buf = bufnr })
+
+  local function save()
+    local lines = vim.api.nvim_buf_get_lines(bufnr, 0, -1, false)
+    local content = table.concat(lines, '\n')
+    local config = loadstring(content)()
+    if not config or type(config) ~= 'table' then
+      notify_error('failed to parse content')
+      return
+    end
+    if empty(config.display_name) then
+      notify_error('display_name cannot be empty')
+      return
+    end
+    if empty(config.computer_name) then
+      notify_error('computer_name cannot be empty')
+      return
+    end
+    M._add(node, { config = config })
+    vim.api.nvim_win_close(winid, false)
+  end
+  vim.keymap.set('n', '<C-s>', function() save() end, { buffer = bufnr })
+end
+
+function M._add(parent, conn)
+  local node = Node.new_node_from_conn(conn)
+  parent:add_child(node)
+  M.refresh(true)
+  M.save_config()
 end
 
 function M.save_config()
