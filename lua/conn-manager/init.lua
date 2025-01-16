@@ -168,7 +168,9 @@ function M.refresh(increment) -- TODO: increment
   if not vim.api.nvim_win_is_valid(M.window) then
     return
   end
+  local pos = vim.api.nvim_win_get_cursor(M.window)
   M.line_to_node = Render.render(vim.api.nvim_win_get_buf(M.window), M.tree)
+  vim.api.nvim_win_set_cursor(M.window, pos)
 end
 
 function M.setup(opts)
