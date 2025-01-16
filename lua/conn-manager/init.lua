@@ -1,3 +1,4 @@
+local Config = require('conn-manager.config')
 local Node = require('conn-manager.node')
 local Render = require('conn-manager.render')
 local Window = require('conn-manager.window')
@@ -65,21 +66,6 @@ local function on_node_open(node)
   return jobid
 end
 
-local defaults = {
-  config_path = 'conn-manager.json',
-  window_config = {
-    width = 30,
-    split = 'left',
-    vertical = true,
-    win = -1,
-  },
-  on_window_open = nil,
-  on_buffer_create = nil,
-  node = {
-    on_open = on_node_open,
-  },
-}
-
 M.config = {}
 ---@type Node
 M.tree = nil
@@ -102,7 +88,8 @@ local function setup_keymaps(bufnr)
       if type(M.config.node.on_open) == 'function' then
         M.config.node.on_open(node)
       else
-        print(node.config.display_name, node.config.computer_name, node.config.port)
+        --print(node.config.display_name, node.config.computer_name, node.config.port)
+        on_node_open(node)
       end
     end
   end, { buffer = bufnr or true })
@@ -182,7 +169,7 @@ end
 
 function M.setup(opts)
   opts = opts or {}
-  M.config = vim.tbl_deep_extend('force', defaults, opts or {})
+  M.config = Config.setup(opts)
   local ok, tree = pcall(Node.load_config, M.config.config_path)
   if not ok then
     vim.notify(tree .. ', conn-manager will be disabled', vim.log.levels.ERROR)

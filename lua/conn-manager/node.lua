@@ -1,3 +1,5 @@
+local Config = require('conn-manager.config')
+
 local M = {}
 
 local Node = {}
@@ -89,13 +91,17 @@ end
 ---@return string|table[]
 function Node:render(indent)
   local indent_text = string.rep('  ', indent)
-  local prefix = self.expandable and (self.expanded and '~' or '+') or ' '
+  local icons = Config.config.node.icons
+  local prefix = self.expandable and (self.expanded and icons.arrow_open or icons.arrow_closed)
+    or '  '
+  local icon = self.expandable and (self.expanded and icons.opened_folder or icons.closed_folder)
+    or icons.terminal_conn
   local label = tostring(self)
   if false then
     return string.format('%s%s %s', indent_text, prefix, label)
   else
     local hl_group = self.expandable and 'Directory' or nil
-    return { { indent_text }, { prefix .. ' ', hl_group }, { label, hl_group } }
+    return { { indent_text }, { prefix, hl_group }, { icon, hl_group }, { label, hl_group } }
   end
 end
 
