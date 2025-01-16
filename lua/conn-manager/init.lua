@@ -144,7 +144,8 @@ local function setup_keymaps(bufnr)
   end, { buffer = bufnr })
 
   vim.keymap.set('n', 'R', M.refresh, { buffer = bufnr })
-  vim.keymap.set('n', 'a', M.add, { buffer = bufnr })
+  vim.keymap.set('n', 'a', M.add_node, { buffer = bufnr })
+  vim.keymap.set('n', 'A', M.add_folder, { buffer = bufnr })
   vim.keymap.set('n', 'D', M.remove, { buffer = bufnr })
   vim.keymap.set('n', 'r', M.modify, { buffer = bufnr })
   vim.keymap.set('n', 'p', M.goto_parent, { buffer = bufnr })
@@ -266,7 +267,25 @@ local function buffer_save_action(node, post_func)
   vim.api.nvim_win_close(winid, false)
 end
 
-function M.add()
+function M.add_folder()
+  local node = get_node()
+  if not node or not node.expandable then
+    return
+  end
+  local name = vim.fn.input('Folder name')
+  if empty(name) then
+    return
+  end
+  local new_node = Node.Node.new(true)
+  new_node.config = {
+    display_name = name,
+  }
+  node:add_child(new_node)
+  M.refresh('add')
+  M.save_config()
+end
+
+function M.add_node()
   local node = get_node()
   if not node or not node.expandable then
     return

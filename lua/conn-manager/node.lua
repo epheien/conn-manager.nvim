@@ -4,6 +4,7 @@ local M = {}
 
 local Node = {}
 Node.__index = Node
+M.Node = Node
 
 ---@class Node
 ---@field parent Node
