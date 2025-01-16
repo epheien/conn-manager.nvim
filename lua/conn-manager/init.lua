@@ -195,7 +195,8 @@ function M.open(focus)
   return M.window
 end
 
-function M.refresh(increment) -- TODO: increment
+-- TODO: increment
+function M.refresh(increment) ---@diagnostic disable-line
   if not vim.api.nvim_win_is_valid(M.window) then
     return
   end
