@@ -269,7 +269,7 @@ function M.add()
   if not node or not node.expandable then
     return
   end
-  local bufnr, winid = Utils.create_scratch_floatwin('conn-manager add connection')
+  local bufnr, _ = Utils.create_scratch_floatwin('conn-manager add connection')
   local template = [[
 -- press <C-s> or <C-w>s to save
 return {
@@ -312,7 +312,7 @@ function M.modify()
     return
   end
 
-  local bufnr, winid = Utils.create_scratch_floatwin('conn-manager modify connection')
+  local bufnr, _ = Utils.create_scratch_floatwin('conn-manager modify connection')
   local template = 'return ' .. vim.inspect(node.config)
   vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, vim.split(template, '\n', {}))
   vim.api.nvim_set_option_value('filetype', 'lua', { buf = bufnr })
