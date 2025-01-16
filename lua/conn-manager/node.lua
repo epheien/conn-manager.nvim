@@ -38,7 +38,9 @@ function Node:inspect()
   return vim.inspect(temp)
 end
 
-function Node:__tostring() return self.config.display_name or string.format('table: %p', self) end
+function Node:__tostring()
+  return self.config and self.config.display_name or string.format('table: %p', self)
+end
 
 -- 添加子节点
 function Node:add_child(child)
