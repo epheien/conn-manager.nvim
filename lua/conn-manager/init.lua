@@ -147,6 +147,7 @@ local function setup_keymaps(bufnr)
   vim.keymap.set('n', 'a', M.add, { buffer = bufnr })
   vim.keymap.set('n', 'D', M.remove, { buffer = bufnr })
   vim.keymap.set('n', 'r', M.modify, { buffer = bufnr })
+  vim.keymap.set('n', 'p', M.goto_parent, { buffer = bufnr })
 end
 
 local function setup_buffer(buffer)
@@ -346,6 +347,20 @@ function M.save_config()
     local ok, err = os.rename(temp, Config.config.config_path)
     if not ok then
       notify_error('[conn-manager] failed to save config: ' .. tostring(err))
+    end
+  end
+end
+
+function M.goto_parent()
+  local node = get_node()
+  if not node or not node.parent then
+    return
+  end
+  local lnum = vim.api.nvim_win_get_cursor(0)[1]
+  for i = lnum - 1, 1, -1 do
+    if M.line_to_node[i] == node.parent then
+      vim.cmd([[normal! m']])
+      vim.api.nvim_win_set_cursor(0, { i, 0 })
     end
   end
 end
