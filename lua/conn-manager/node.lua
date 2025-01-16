@@ -145,6 +145,16 @@ function M.load_config(fname)
   return root
 end
 
+function M.new_conn_from_node(node)
+  local conn = {}
+  conn.config = node.config
+  conn.children = {}
+  for _, child in ipairs(node.children or {}) do
+    table.insert(conn.children, M.new_conn_from_node(child))
+  end
+  return conn
+end
+
 function M.read_config(fname)
   local file = io.open(fname, 'r')
   assert(file, 'failed to load config from ' .. fname)

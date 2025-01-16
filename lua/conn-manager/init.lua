@@ -80,6 +80,14 @@ M.line_to_node = {}
 ---@type integer
 M.window = -1
 
+local function get_node()
+  local ok, pos = pcall(vim.api.nvim_win_get_cursor, M.window)
+  if not ok then
+    return nil
+  end
+  return M.line_to_node[pos[1]]
+end
+
 local function setup_keymaps(bufnr)
   vim.keymap.set('n', '<CR>', function()
     local lnum = vim.api.nvim_win_get_cursor(0)[1]
@@ -188,6 +196,42 @@ function M.setup(opts)
   M.tree = tree
 
   vim.api.nvim_create_user_command('ConnManagerOpen', function() M.open() end, { nargs = 0 })
+end
+
+function M.remove()
+  local node = get_node()
+  if not node or not node.parent then
+    return
+  end
+  local choice =
+    vim.fn.confirm(string.format('Delete %s?', node.config.display_name), '&Yes\n&No\n&Cancel')
+  if choice == 1 then
+    node.parent:remove_child(node)
+    M.refresh(true)
+    M.save_config()
+  end
+end
+
+function M.save_config()
+  local conn = Node.new_conn_from_node(M.tree)
+  local config = {
+    connections = conn.children,
+  }
+  local content = vim.json.encode(config)
+  local temp = Config.config.config_path .. '.tmp'
+  local file = io.open(temp, 'w')
+  if not file then
+    vim.notify('[conn-manager] failed to write config', vim.log.levels.ERROR)
+    return
+  end
+  if file then
+    file:write(content)
+    file:close()
+    local ok, err = os.rename(temp, Config.config.config_path)
+    if not ok then
+      vim.notify('[conn-manager] failed to save config: ' .. tostring(err), vim.log.levels.ERROR)
+    end
+  end
 end
 
 return M
