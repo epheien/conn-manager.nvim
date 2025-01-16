@@ -153,27 +153,4 @@ function M.read_config(fname)
   return config
 end
 
--- 示例用法
---local root = Node.new(true)
---root.expanded = true
---local child1 = Node.new(true)
---local child2 = Node.new(true)
---local child3 = Node.new()
---local child4 = Node.new()
---
---root:add_child(child1)
---root:add_child(child2)
---child1:add_child(child3)
---child1:add_child(child4)
---child1.expanded = true
---
---local lines, line_to_node = root:render()
---for _, line in ipairs(lines) do
---  print(line)
---end
---
---for ln, node in ipairs(line_to_node) do
---  print(ln, node, type(node))
---end
-
 return M
