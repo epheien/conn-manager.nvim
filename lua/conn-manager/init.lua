@@ -86,7 +86,7 @@ local function on_node_open(node)
           break
         end
       end
-      M.refresh(true)
+      M.refresh('job_exit')
     end,
   })
   table.insert(node.jobs, jobid)
@@ -121,6 +121,7 @@ local function setup_keymaps(bufnr)
     end
     if node.expandable then
       node.expanded = not node.expanded
+      M.refresh('expand')
     else
       if type(M.config.node.on_open) == 'function' then
         M.config.node.on_open(node)
@@ -128,8 +129,8 @@ local function setup_keymaps(bufnr)
         --print(node.config.display_name, node.config.computer_name, node.config.port)
         on_node_open(node)
       end
+      M.refresh('open')
     end
-    M.refresh(true)
   end, { buffer = bufnr or true })
 
   vim.keymap.set(
@@ -197,7 +198,9 @@ function M.open(focus)
 end
 
 -- TODO: increment
-function M.refresh(increment) ---@diagnostic disable-line
+---@param event? string
+---@param force? boolean true 表示强制刷新全部
+function M.refresh(event, force) ---@diagnostic disable-line
   if not vim.api.nvim_win_is_valid(M.window) then
     return
   end
@@ -232,9 +235,33 @@ function M.remove()
     vim.fn.confirm(string.format('Delete %s?', node.config.display_name), '&Yes\n&No\n&Cancel')
   if choice == 1 then
     node.parent:remove_child(node)
-    M.refresh(true)
+    M.refresh('remove')
     M.save_config()
   end
+end
+
+local function buffer_save_action(node, post_func)
+  local bufnr = vim.api.nvim_get_current_buf()
+  local winid = vim.api.nvim_get_current_win()
+  local lines = vim.api.nvim_buf_get_lines(bufnr, 0, -1, false)
+  local content = table.concat(lines, '\n')
+  local config = loadstring(content)()
+  if not config or type(config) ~= 'table' then
+    notify_error('failed to parse content')
+    return
+  end
+  if empty(config.display_name) then
+    notify_error('display_name cannot be empty')
+    return
+  end
+  if empty(config.computer_name) then
+    notify_error('computer_name cannot be empty')
+    return
+  end
+  if type(post_func) == 'function' then
+    post_func(node, config)
+  end
+  vim.api.nvim_win_close(winid, false)
 end
 
 function M.add()
@@ -242,7 +269,7 @@ function M.add()
   if not node or not node.expandable then
     return
   end
-  local bufnr, winid = Utils.create_scratch_floatwin('conn-manager')
+  local bufnr, winid = Utils.create_scratch_floatwin('conn-manager add connection')
   local template = [[
 -- press <C-s> or <C-w><C-s> to save
 return {
@@ -285,6 +312,38 @@ function M._add(parent, conn)
   parent:add_child(node)
   M.refresh(true)
   M.save_config()
+end
+
+function M.modify()
+  local node = get_node()
+  if not node then
+    return
+  end
+  if node.expandable then
+    local name = vim.fn.input({
+      prompt = 'Rename to',
+      default = node.config.display_name,
+    })
+    if not empty(name) then
+      node.config.display_name = name
+      M.refresh('rename')
+      M.save_config()
+    end
+    return
+  end
+
+  local bufnr, winid = Utils.create_scratch_floatwin('conn-manager modify connection')
+  local template = 'return ' .. vim.inspect(node.config)
+  vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, vim.split(template, '\n', {}))
+  vim.api.nvim_set_option_value('filetype', 'lua', { buf = bufnr })
+
+  vim.keymap.set('n', '<C-s>', function()
+    buffer_save_action(node, function(n, config)
+      n.config = config
+      M.refresh('modify')
+      M.save_config()
+    end)
+  end, { buffer = bufnr })
 end
 
 function M.save_config()
