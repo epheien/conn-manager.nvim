@@ -17,7 +17,7 @@ function M.render(bufnr, tree)
     -- root 节点需要特殊处理显示效果
     lines[1] = { { 'Connections', 'Title' } }
     vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, { '' }) -- 清空缓冲区
-    require('mylib.buffer').echo_chunks_list_to_buffer(ns_id, bufnr, lines)
+    require('conn-manager.buffer').echo_chunks_list_to_buffer(ns_id, bufnr, lines)
   end
   vim.api.nvim_set_option_value('modifiable', false, { buf = bufnr })
   return line_to_node
