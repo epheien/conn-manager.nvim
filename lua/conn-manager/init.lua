@@ -294,13 +294,6 @@ return {
   vim.keymap.set('n', '<C-w>s', '<C-s>', { buffer = bufnr, remap = true, silent = true })
 end
 
-function M._add(parent, conn)
-  local node = Node.new_node_from_conn(conn)
-  parent:add_child(node)
-  M.refresh(true)
-  M.save_config()
-end
-
 function M.modify()
   local node = get_node()
   if not node then
