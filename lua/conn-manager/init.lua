@@ -5,6 +5,31 @@ local Window = require('conn-manager.window')
 
 local M = {}
 
+local function notify_error(msg) vim.notify(msg, vim.log.levels.ERROR) end
+
+-- 类似 vim.fn.empty()
+local function empty(v)
+  if v == nil then
+    return true
+  end
+  -- The possible results of this function are "nil" (a string, not the value nil),
+  -- "number", "string", "boolean", "table", "function", "thread", and "userdata".
+  local t = type(v)
+  if t == 'number' then
+    return v == 0
+  elseif t == 'string' then
+    return v == ''
+  elseif t == 'boolean' then
+    return not v
+  elseif t == 'table' then
+    for _, _ in pairs(v) do
+      return false
+    end
+    return true
+  end
+  return false
+end
+
 -- 叶子节点 open hook
 ---comment
 ---@param node Node
@@ -14,7 +39,7 @@ local function on_node_open(node)
   if node.config.port then
     table.insert(args, '-p' .. tostring(node.config.port))
   end
-  if node.config.username then
+  if not empty(node.config.username) then
     table.insert(args, '-l' .. node.config.username)
   end
   table.insert(args, node.config.computer_name)
@@ -28,15 +53,13 @@ local function on_node_open(node)
   ---@return function
   local function make_callback(state)
     return function(job_id, data, event) ---@diagnostic disable-line: unused-local
-      if state.done or not node.config.password then
+      if state.done or empty(node.config.password) then
         return
       end
       local text = table.concat(data)
       if vim.regex([['s password: $]]):match_str(text) then
-        if node.config.password and node.config.password ~= '' then
-          vim.fn.chansend(job_id, node.config.password .. '\n')
-          state.done = true
-        end
+        vim.fn.chansend(job_id, node.config.password .. '\n')
+        state.done = true
       end
       state.match_count = (state.match_count or 0) + #data
       if state.match_count >= 100 then
@@ -190,7 +213,7 @@ function M.setup(opts)
   M.config = Config.setup(opts)
   local ok, tree = pcall(Node.load_config, M.config.config_path)
   if not ok then
-    vim.notify(tree .. ', conn-manager will be disabled', vim.log.levels.ERROR)
+    notify_error(tree .. ', conn-manager will be disabled')
     return
   end
   M.tree = tree
@@ -221,7 +244,7 @@ function M.save_config()
   local temp = Config.config.config_path .. '.tmp'
   local file = io.open(temp, 'w')
   if not file then
-    vim.notify('[conn-manager] failed to write config', vim.log.levels.ERROR)
+    notify_error('[conn-manager] failed to write config')
     return
   end
   if file then
@@ -229,7 +252,7 @@ function M.save_config()
     file:close()
     local ok, err = os.rename(temp, Config.config.config_path)
     if not ok then
-      vim.notify('[conn-manager] failed to save config: ' .. tostring(err), vim.log.levels.ERROR)
+      notify_error('[conn-manager] failed to save config: ' .. tostring(err))
     end
   end
 end
