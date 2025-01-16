@@ -39,3 +39,9 @@ luac.out
 *.x86_64
 *.hex
 
+/vimp.vim
+gtags.files
+GPATH
+GRTAGS
+GTAGS
+.DS_Store
