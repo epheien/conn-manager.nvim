@@ -12,7 +12,7 @@ Node.__index = Node
 ---@field expandable boolean
 ---@field data any private data
 ---@field config table
----@field jobs integer 打开的终端实例数量
+---@field jobs integer[] 打开的终端实例 job_id
 ---@return table
 function Node.new(expandable)
   local self = setmetatable({}, Node)
@@ -22,8 +22,20 @@ function Node.new(expandable)
   self.expandable = expandable
   self.data = nil
   self.config = {}
-  self.jobs = 0
+  self.jobs = {}
   return self
+end
+
+---@return string
+function Node:inspect()
+  local temp = {}
+  for key, val in pairs(self) do
+    -- ignore some keys
+    if not (key == 'parent' or key == 'children') then
+      temp[key] = val
+    end
+  end
+  return vim.inspect(temp)
 end
 
 function Node:__tostring() return self.config.display_name or string.format('table: %p', self) end
@@ -101,7 +113,12 @@ function Node:render(indent)
     return string.format('%s%s %s', indent_text, prefix, label)
   else
     local hl_group = self.expandable and 'Directory' or nil
-    return { { indent_text }, { prefix, hl_group }, { icon, hl_group }, { label, hl_group } }
+    local msgs = { { indent_text }, { prefix, hl_group }, { icon, hl_group }, { label, hl_group } }
+    if #self.jobs > 0 then
+      table.insert(msgs, { string.format(' [%d]', tostring(#self.jobs)), 'Special' })
+    end
+    --print(vim.inspect(msgs), vim.inspect(self.jobs), #self.jobs)
+    return msgs
   end
 end
 

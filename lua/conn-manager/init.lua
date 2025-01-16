@@ -56,10 +56,16 @@ local function on_node_open(node)
     on_stdout = make_callback({ done = false }),
     on_exit = function(job_id, exit_code, event) ---@diagnostic disable-line: unused-local
       --print(node.jobs, job_id, event, exit_code)
-      node.jobs = node.jobs - 1
+      for i, id in ipairs(node.jobs) do
+        if id == job_id then
+          table.remove(node.jobs, i)
+          break
+        end
+      end
+      M.refresh(true)
     end,
   })
-  node.jobs = node.jobs + 1
+  table.insert(node.jobs, jobid)
   vim.cmd.startinsert()
 
   --print(jobid, vim.inspect(args))
@@ -83,7 +89,6 @@ local function setup_keymaps(bufnr)
     end
     if node.expandable then
       node.expanded = not node.expanded
-      M.refresh()
     else
       if type(M.config.node.on_open) == 'function' then
         M.config.node.on_open(node)
@@ -92,6 +97,7 @@ local function setup_keymaps(bufnr)
         on_node_open(node)
       end
     end
+    M.refresh(true)
   end, { buffer = bufnr or true })
 
   vim.keymap.set(
@@ -103,12 +109,10 @@ local function setup_keymaps(bufnr)
 
   vim.keymap.set('n', 'i', function()
     local node = M.line_to_node[vim.api.nvim_win_get_cursor(0)[1]]
-    if node.expandable then
-      vim.notify('this is a folder')
-    else
-      vim.notify(node.config.description or 'no description')
-    end
+    vim.notify(node:inspect())
   end, { buffer = bufnr or true })
+
+  vim.keymap.set('n', 'R', function() M.refresh() end, { buffer = bufnr or true })
 end
 
 local function setup_buffer(buffer)
@@ -160,7 +164,7 @@ function M.open(focus)
   return M.window
 end
 
-function M.refresh()
+function M.refresh(increment) -- TODO: increment
   if not vim.api.nvim_win_is_valid(M.window) then
     return
   end
