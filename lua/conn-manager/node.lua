@@ -124,12 +124,12 @@ function Node:render(indent)
   end
 end
 
-local function new_node_from_conn(conn)
+function M.new_node_from_conn(conn)
   local node = Node.new(#(conn.children or {}) > 0)
   --node.expanded = node.expandable and true or false
   node.config = conn.config
   for _, child in ipairs(conn.children or {}) do
-    node:add_child(new_node_from_conn(child))
+    node:add_child(M.new_node_from_conn(child))
   end
   return node
 end
@@ -142,7 +142,7 @@ function M.load_config(fname)
   local root = Node.new(true)
   root.expanded = true -- root 无条件展开
   for _, conn in ipairs(config.connections) do
-    root:add_child(new_node_from_conn(conn))
+    root:add_child(M.new_node_from_conn(conn))
   end
   return root
 end
