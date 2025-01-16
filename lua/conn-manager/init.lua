@@ -66,7 +66,7 @@ local function on_node_open(node)
     end,
   })
   table.insert(node.jobs, jobid)
-  vim.cmd.startinsert()
+  --vim.cmd.startinsert()
 
   --print(jobid, vim.inspect(args))
   return jobid
