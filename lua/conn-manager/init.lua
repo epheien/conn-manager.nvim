@@ -113,6 +113,7 @@ local function get_node()
 end
 
 local function setup_keymaps(bufnr)
+  bufnr = bufnr or 0
   vim.keymap.set('n', '<CR>', function()
     local lnum = vim.api.nvim_win_get_cursor(0)[1]
     local node = M.line_to_node[lnum]
@@ -131,21 +132,21 @@ local function setup_keymaps(bufnr)
       end
       M.refresh('open')
     end
-  end, { buffer = bufnr or true })
+  end, { buffer = bufnr })
 
-  vim.keymap.set(
-    'n',
-    '<2-LeftMouse>',
-    '<CR>',
-    { remap = true, silent = true, buffer = bufnr or true }
-  )
+  -- 使用 LeftRelease 触发, 可避免双击连接 ssh 后, 在终端退出插入模式的问题
+  vim.keymap.set('n', '<2-LeftRelease>', '<CR>', { remap = true, silent = true, buffer = bufnr })
+  vim.keymap.set('n', '<2-LeftMouse>', '<Nop>', { silent = true, buffer = bufnr })
 
   vim.keymap.set('n', 'i', function()
     local node = M.line_to_node[vim.api.nvim_win_get_cursor(0)[1]]
     vim.notify(node:inspect())
-  end, { buffer = bufnr or true })
+  end, { buffer = bufnr })
 
-  vim.keymap.set('n', 'R', function() M.refresh() end, { buffer = bufnr or true })
+  vim.keymap.set('n', 'R', M.refresh, { buffer = bufnr })
+  vim.keymap.set('n', 'a', M.add, { buffer = bufnr })
+  vim.keymap.set('n', 'D', M.remove, { buffer = bufnr })
+  vim.keymap.set('n', 'r', M.modify, { buffer = bufnr })
 end
 
 local function setup_buffer(buffer)
