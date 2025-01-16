@@ -271,7 +271,7 @@ function M.add()
   end
   local bufnr, winid = Utils.create_scratch_floatwin('conn-manager add connection')
   local template = [[
--- press <C-s> or <C-w><C-s> to save
+-- press <C-s> or <C-w>s to save
 return {
   display_name = '',
   description = '',
@@ -282,29 +282,16 @@ return {
 }]]
   vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, vim.split(template, '\n', {}))
   vim.api.nvim_set_option_value('filetype', 'lua', { buf = bufnr })
-  vim.api.nvim_set_option_value('buftype', 'nofile', { buf = bufnr })
-  vim.api.nvim_set_option_value('bufhidden', 'wipe', { buf = bufnr })
 
-  local function save()
-    local lines = vim.api.nvim_buf_get_lines(bufnr, 0, -1, false)
-    local content = table.concat(lines, '\n')
-    local config = loadstring(content)()
-    if not config or type(config) ~= 'table' then
-      notify_error('failed to parse content')
-      return
-    end
-    if empty(config.display_name) then
-      notify_error('display_name cannot be empty')
-      return
-    end
-    if empty(config.computer_name) then
-      notify_error('computer_name cannot be empty')
-      return
-    end
-    M._add(node, { config = config })
-    vim.api.nvim_win_close(winid, false)
-  end
-  vim.keymap.set('n', '<C-s>', function() save() end, { buffer = bufnr })
+  vim.keymap.set('n', '<C-s>', function()
+    buffer_save_action(node, function(n, config)
+      local new_node = Node.new_node_from_conn({ config = config })
+      n:add_child(new_node)
+      M.refresh('add')
+      M.save_config()
+    end)
+  end, { buffer = bufnr })
+  vim.keymap.set('n', '<C-w>s', '<C-s>', { buffer = bufnr, remap = true, silent = true })
 end
 
 function M._add(parent, conn)
@@ -344,6 +331,7 @@ function M.modify()
       M.save_config()
     end)
   end, { buffer = bufnr })
+  vim.keymap.set('n', '<C-w>s', '<C-s>', { buffer = bufnr, remap = true, silent = true })
 end
 
 function M.save_config()
