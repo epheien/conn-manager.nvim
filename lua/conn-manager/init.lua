@@ -149,6 +149,7 @@ local function setup_window(win)
   vim.api.nvim_set_option_value('cursorline', true, { win = win })
   vim.api.nvim_set_option_value('winfixwidth', true, { win = win })
   vim.api.nvim_set_option_value('number', false, { win = win })
+  vim.api.nvim_set_option_value('winfixbuf', true, { win = win })
   if type(M.config.on_window_open) == 'function' then
     M.config.on_window_open(M.window)
   end

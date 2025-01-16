@@ -64,34 +64,39 @@ function Node:get_root()
 end
 
 ---render node and it's children
----@param indent integer
----@param lines string[]
----@param line_to_node table[]
+---@param indent? integer
+---@param lines? string[]
+---@param line_to_node? table[]
 ---@return string[]
 ---@return table[]
-function Node:render(indent, lines, line_to_node)
+function Node:deep_render(indent, lines, line_to_node)
   indent = indent or 0
   lines = lines or {}
   line_to_node = line_to_node or {}
-  local prefix = string.rep('  ', indent)
-  table.insert(
-    lines,
-    string.format(
-      '%s%s %s',
-      prefix,
-      self.expandable and (self.expanded and '~' or '+') or ' ',
-      tostring(self)
-    )
-  )
+  table.insert(lines, self:render(indent))
   table.insert(line_to_node, self)
   if not self.expanded then
     goto out
   end
   for _, child in ipairs(self.children) do
-    child:render(indent + 1, lines, line_to_node)
+    child:deep_render(indent + 1, lines, line_to_node)
   end
   ::out::
   return lines, line_to_node
+end
+
+---@param indent integer
+---@return string|table[]
+function Node:render(indent)
+  local indent_text = string.rep('  ', indent)
+  local prefix = self.expandable and (self.expanded and '~' or '+') or ' '
+  local label = tostring(self)
+  if false then
+    return string.format('%s%s %s', indent_text, prefix, label)
+  else
+    local hl_group = self.expandable and 'Directory' or nil
+    return { { indent_text }, { prefix .. ' ', hl_group }, { label, hl_group } }
+  end
 end
 
 local function new_node_from_conn(conn)
