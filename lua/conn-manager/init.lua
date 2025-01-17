@@ -47,7 +47,8 @@ local function on_node_open(node)
   table.insert(args, node.config.computer_name)
 
   -- @跳到准备渲染的窗口
-  local win = Window.pick_window_for_node_open()
+  local win = Config.config.node.window_picker and Config.config.node.window_picker(node)
+    or Window.pick_window_for_node_open()
   vim.api.nvim_set_current_win(win)
 
   ---生成闭包

@@ -11,6 +11,7 @@ M.defaults = {
   on_window_open = nil,
   on_buffer_create = nil,
   node = {
+    window_picker = nil, -- window_picker for builtin open function
     on_open = nil,
     icons = {
       arrow_closed = ' ',
