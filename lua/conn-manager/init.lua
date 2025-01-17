@@ -321,6 +321,8 @@ function M.setup(opts)
   end
   M.tree = tree
 
+  require('conn-manager.highlights').setup()
+
   vim.api.nvim_create_user_command(
     'ConnManagerOpen',
     function() M.conn_manager_open() end,

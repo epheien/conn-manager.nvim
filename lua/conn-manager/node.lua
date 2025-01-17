@@ -2,6 +2,11 @@ local Config = require('conn-manager.config')
 
 local M = {}
 
+local clip_hl = {
+  copy = 'ConnManagerCopyHL',
+  cut = 'ConnManagerCutHL',
+}
+
 ---@class Node
 ---@field parent Node
 ---@field children Node[]
@@ -118,11 +123,6 @@ function Node:deep_render(indent, lines, line_to_node)
   return lines, line_to_node
 end
 
-local clip_hl = {
-  cut = 'Changed',
-  copy = 'Added',
-}
-
 ---@param indent integer
 ---@return string|table[]
 function Node:render(indent)
@@ -136,7 +136,7 @@ function Node:render(indent)
   if false then
     return string.format('%s%s %s', indent_text, prefix, label)
   else
-    local hl_group = self.expandable and 'Directory' or nil
+    local hl_group = self.expandable and 'ConnManagerFolder' or nil
     local msgs = {
       { indent_text },
       { prefix, hl_group },
