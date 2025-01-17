@@ -87,7 +87,7 @@ local function on_node_open(node)
           break
         end
       end
-      M.refresh('job_exit')
+      M.refresh_node(node)
     end,
   })
   table.insert(node.jobs, jobid)
@@ -135,7 +135,7 @@ local function setup_keymaps(bufnr)
         --print(node.config.display_name, node.config.computer_name, node.config.port)
         on_node_open(node)
       end
-      M.refresh('open')
+      M.refresh_node(node)
     end
   end, { buffer = bufnr })
 
@@ -369,7 +369,7 @@ function M.modify()
     })
     if not empty(name) then
       node.config.display_name = name
-      M.refresh('rename')
+      M.refresh_node(node)
       M.save_config()
     end
     return
@@ -383,7 +383,7 @@ function M.modify()
   vim.keymap.set('n', '<C-s>', function()
     buffer_save_action(node, function(n, config)
       n.config = config
-      M.refresh('modify')
+      M.refresh_node(node)
       M.save_config()
     end)
   end, { buffer = bufnr })
