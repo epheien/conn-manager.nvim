@@ -14,6 +14,7 @@ M.Node = Node
 ---@field data any private data
 ---@field config table
 ---@field jobs integer[] 打开的终端实例 job_id
+---@field clip string 'cut' or 'copy'
 ---@return table
 function Node.new(expandable)
   local self = setmetatable({}, Node)
@@ -24,6 +25,7 @@ function Node.new(expandable)
   self.data = nil
   self.config = {}
   self.jobs = {}
+  self.clip = ''
   return self
 end
 
@@ -115,6 +117,11 @@ function Node:deep_render(indent, lines, line_to_node)
   return lines, line_to_node
 end
 
+local clip_hl = {
+  cut = 'Changed',
+  copy = 'Added',
+}
+
 ---@param indent integer
 ---@return string|table[]
 function Node:render(indent)
@@ -129,7 +136,12 @@ function Node:render(indent)
     return string.format('%s%s %s', indent_text, prefix, label)
   else
     local hl_group = self.expandable and 'Directory' or nil
-    local msgs = { { indent_text }, { prefix, hl_group }, { icon, hl_group }, { label, hl_group } }
+    local msgs = {
+      { indent_text },
+      { prefix, hl_group },
+      { icon, hl_group },
+      { label, clip_hl[self.clip] or hl_group },
+    }
     if #self.jobs > 0 then
       table.insert(msgs, { string.format(' [%d]', tostring(#self.jobs)), 'Special' })
     end
