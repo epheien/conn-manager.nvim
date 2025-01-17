@@ -2,10 +2,6 @@ local Config = require('conn-manager.config')
 
 local M = {}
 
-local Node = {}
-Node.__index = Node
-M.Node = Node
-
 ---@class Node
 ---@field parent Node
 ---@field children Node[]
@@ -15,13 +11,18 @@ M.Node = Node
 ---@field config table
 ---@field jobs integer[] 打开的终端实例 job_id
 ---@field clip string 'cut' or 'copy'
+local Node = {}
+Node.__index = Node
+M.Node = Node
+
+---@param expandable? boolean
 ---@return Node
 function Node.new(expandable)
   local self = setmetatable({}, Node)
   self.parent = nil
   self.children = {}
   self.expanded = false
-  self.expandable = expandable
+  self.expandable = expandable and true or false
   self.data = nil
   self.config = {}
   self.jobs = {}

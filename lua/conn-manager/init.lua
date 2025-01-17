@@ -10,6 +10,8 @@ local function notify_error(msg) vim.notify(msg, vim.log.levels.ERROR) end
 local function notify(msg) vim.notify(msg, vim.log.levels.INFO) end
 
 -- 类似 vim.fn.empty()
+---param v any
+---@return boolean
 local function empty(v)
   if v == nil then
     return true
@@ -470,7 +472,7 @@ end
 
 function M.cut_node()
   local node = get_node()
-  if not node then
+  if not node or not node.parent then
     return
   end
   local clip_node = M.clipboard.node
@@ -488,7 +490,7 @@ end
 
 function M.copy_node()
   local node = get_node()
-  if not node then
+  if not node or not node.parent then
     return
   end
   if node.expandable then
@@ -511,7 +513,7 @@ end
 function M.paste_node(before)
   local clip_kind = M.clipboard.kind
   local clip_node = M.clipboard.node
-  if empty(clip_node) then
+  if not clip_node or not clip_node.parent then
     return
   end
   local node = get_node()
