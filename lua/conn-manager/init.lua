@@ -314,7 +314,7 @@ end
 function M.setup(opts)
   opts = opts or {}
   M.config = Config.setup(opts)
-  local ok, tree = pcall(Node.load_config, M.config.config_path)
+  local ok, tree = pcall(Node.load_config, M.config.config_file)
   if not ok then
     notify_error(tree .. ', conn-manager will be disabled')
     return
@@ -457,7 +457,7 @@ function M.save_config()
     connections = conn.children,
   }
   local content = vim.json.encode(config)
-  local temp = Config.config.config_path .. '.tmp'
+  local temp = Config.config.config_file .. '.tmp'
   local file = io.open(temp, 'w')
   if not file then
     notify_error('[conn-manager] failed to write config')
@@ -466,7 +466,7 @@ function M.save_config()
   if file then
     file:write(content)
     file:close()
-    local ok, err = os.rename(temp, Config.config.config_path)
+    local ok, err = os.rename(temp, Config.config.config_file)
     if not ok then
       notify_error('[conn-manager] failed to save config: ' .. tostring(err))
     end
