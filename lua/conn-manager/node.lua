@@ -164,10 +164,13 @@ end
 ---@param fname string
 ---@return Node
 function M.load_config(fname)
-  local config = M.read_config(fname)
+  local config = {}
+  if vim.uv.fs_stat(fname) then ---@diagnostic disable-line
+    config = M.read_config(fname)
+  end
   local root = Node.new(true)
   root.expanded = true -- root 无条件展开
-  for _, conn in ipairs(config.connections) do
+  for _, conn in ipairs(config.connections or {}) do
     root:add_child(M.new_node_from_conn(conn))
   end
   return root
