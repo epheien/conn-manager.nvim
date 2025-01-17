@@ -5,7 +5,7 @@ local M = {}
 ---@param bufnr integer
 ---@param lnum integer
 ---@param messages table[]
----@param bang boolean
+---@param bang? boolean
 ---@return integer render 的行数
 local function echo_to_buffer(ns_id, bufnr, lnum, messages, bang)
   ns_id = ns_id or vim.api.nvim_create_namespace('echo_to_buffer')

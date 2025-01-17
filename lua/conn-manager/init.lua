@@ -106,6 +106,8 @@ M.line_to_node = {}
 M.window = -1
 -- kind 'cut'|'copy'
 M.clipboard = { kind = 'cut', node = nil }
+-- namespace
+M.ns_id = vim.api.nvim_create_namespace('conn-manager')
 
 local function get_node()
   local ok, pos = pcall(vim.api.nvim_win_get_cursor, M.window)
@@ -199,7 +201,7 @@ function M.open(focus)
 
   local buffer = vim.api.nvim_create_buf(false, true)
   setup_buffer(buffer)
-  local line_to_node = Render.render(buffer, M.tree)
+  local line_to_node = Render.render(M.ns_id, buffer, M.tree)
   M.line_to_node = line_to_node
 
   M.window = vim.api.nvim_open_win(buffer, focus, M.config.window_config)
@@ -216,7 +218,7 @@ function M.refresh(event, force) ---@diagnostic disable-line
   end
   local bufnr = vim.api.nvim_win_get_buf(M.window)
   local pos = vim.api.nvim_win_get_cursor(M.window)
-  M.line_to_node = Render.render(bufnr, M.tree)
+  M.line_to_node = Render.render(M.ns_id, bufnr, M.tree)
   if pos[1] > vim.api.nvim_buf_line_count(bufnr) then
     pos[1] = vim.api.nvim_buf_line_count(bufnr)
   end
@@ -227,7 +229,31 @@ function M.refresh_node(node)
   if not node then
     return
   end
-  M.refresh()
+
+  local lnum = 0
+  if get_node() == node then
+    lnum = vim.api.nvim_win_get_cursor(M.window)[1] -- 快速路径
+  else
+    for ln = 1, #M.line_to_node do
+      if M.line_to_node[ln] == node then
+        lnum = ln
+        break
+      end
+    end
+    if lnum == 0 then
+      return
+    end
+  end
+
+  local msgs = node:render(node:get_depth() - 1)
+  local bufnr = vim.api.nvim_win_get_buf(M.window)
+  local pos = vim.api.nvim_win_get_cursor(M.window)
+  vim.api.nvim_set_option_value('modifiable', true, { buf = bufnr })
+  vim.api.nvim_buf_clear_namespace(bufnr, M.ns_id, lnum - 1, lnum)
+  vim.api.nvim_buf_set_lines(bufnr, lnum - 1, lnum, false, { '' })
+  require('conn-manager.buffer').echo_to_buffer(M.ns_id, bufnr, lnum, msgs)
+  vim.api.nvim_set_option_value('modifiable', false, { buf = bufnr })
+  vim.api.nvim_win_set_cursor(M.window, pos)
 end
 
 function M.setup(opts)
@@ -402,10 +428,11 @@ end
 
 local function clear_clipboard()
   if M.clipboard.node then
-    M.clipboard.node.clip = ''
+    local clip_node = M.clipboard.node
+    clip_node.clip = ''
     M.clipboard.node = nil
     M.clipboard.kind = ''
-    M.refresh_node(M.clipboard.node)
+    M.refresh_node(clip_node)
   end
 end
 
@@ -415,8 +442,9 @@ function M.cut_node()
     return
   end
   local clip_node = M.clipboard.node
+  local clip_kind = M.clipboard.kind
   clear_clipboard()
-  if clip_node == node then
+  if clip_node == node and clip_kind == 'cut' then
     notify(string.format('%s removed from clipboard', node))
   else
     M.clipboard = { kind = 'cut', node = node }
@@ -436,8 +464,9 @@ function M.copy_node()
     return
   end
   local clip_node = M.clipboard.node
+  local clip_kind = M.clipboard.kind
   clear_clipboard()
-  if clip_node == node then
+  if clip_node == node and clip_kind == 'copy' then
     notify(string.format('%s removed from clipboard', node))
   else
     M.clipboard = { kind = 'copy', node = node }

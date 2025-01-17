@@ -1,11 +1,10 @@
 local M = {}
 
-local ns_id = vim.api.nvim_create_namespace('conn-manager')
-
+---@param ns_id integer
 ---@param bufnr integer
 ---@param tree Node
 ---@return Node[]
-function M.render(bufnr, tree)
+function M.render(ns_id, bufnr, tree)
   vim.api.nvim_set_option_value('modifiable', true, { buf = bufnr })
   local lines, line_to_node = tree:deep_render(-1)
   vim.api.nvim_buf_clear_namespace(bufnr, ns_id, 0, -1)

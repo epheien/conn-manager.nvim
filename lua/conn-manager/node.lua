@@ -125,7 +125,7 @@ local clip_hl = {
 ---@param indent integer
 ---@return string|table[]
 function Node:render(indent)
-  local indent_text = string.rep('  ', indent)
+  local indent_text = string.rep('  ', indent or 0)
   local icons = Config.config.node.icons
   local prefix = self.expandable and (self.expanded and icons.arrow_open or icons.arrow_closed)
     or '  '
