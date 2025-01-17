@@ -44,4 +44,40 @@ M.create_scratch_floatwin = function(title)
   return bufid, scratch_winid
 end
 
+-- 类似 vim.fn.empty()
+---param v any
+---@return boolean
+function M.empty(v)
+  if v == nil then
+    return true
+  end
+  -- The possible results of this function are "nil" (a string, not the value nil),
+  -- "number", "string", "boolean", "table", "function", "thread", and "userdata".
+  local t = type(v)
+  if t == 'number' then
+    return v == 0
+  elseif t == 'string' then
+    return v == ''
+  elseif t == 'boolean' then
+    return not v
+  elseif t == 'table' then
+    for _, _ in pairs(v) do
+      return false
+    end
+    return true
+  end
+  return false
+end
+
+---展开 '~/abc/xyz' 路径为 '$HOME/abc/xyz'
+---@param path string
+---@return string
+function M.expand_user(path)
+  local home = os.getenv('HOME')
+  if M.empty(home) then
+    return path
+  end
+  return (path:gsub("^~/", home .. '/'))
+end
+
 return M

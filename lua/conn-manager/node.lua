@@ -1,4 +1,5 @@
 local Config = require('conn-manager.config')
+local Types = require('conn-manager.types')
 
 local M = {}
 
@@ -13,7 +14,7 @@ local clip_hl = {
 ---@field expanded boolean
 ---@field expandable boolean
 ---@field data any private data
----@field config table
+---@field config ConnectionConfig
 ---@field jobs integer[] 打开的终端实例 job_id
 ---@field clip string 'cut' or 'copy'
 local Node = {}
@@ -29,7 +30,7 @@ function Node.new(expandable)
   self.expanded = false
   self.expandable = expandable and true or false
   self.data = nil
-  self.config = {}
+  self.config = Types.ConnectionConfig.new()
   self.jobs = {}
   self.clip = ''
   return self
@@ -105,7 +106,7 @@ end
 ---@param indent? integer
 ---@param lines? string[]
 ---@param line_to_node? table[]
----@return string[]
+---@return string[]|table[]
 ---@return table[]
 function Node:deep_render(indent, lines, line_to_node)
   indent = indent or 0
@@ -153,7 +154,7 @@ end
 
 function M.new_node_from_conn(conn)
   local node = Node.new(#(conn.children or {}) > 0 or conn.config.type == 'folder')
-  node.config = conn.config
+  node.config = vim.tbl_extend('force', Types.ConnectionConfig.new(), conn.config)
   for _, child in ipairs(conn.children or {}) do
     node:add_child(M.new_node_from_conn(child))
   end

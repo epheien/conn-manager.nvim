@@ -6,33 +6,9 @@ local Utils = require('conn-manager.utils')
 
 local M = {}
 
+local empty = Utils.empty
 local function notify_error(msg) vim.notify(msg, vim.log.levels.ERROR) end
 local function notify(msg) vim.notify(msg, vim.log.levels.INFO) end
-
--- 类似 vim.fn.empty()
----param v any
----@return boolean
-local function empty(v)
-  if v == nil then
-    return true
-  end
-  -- The possible results of this function are "nil" (a string, not the value nil),
-  -- "number", "string", "boolean", "table", "function", "thread", and "userdata".
-  local t = type(v)
-  if t == 'number' then
-    return v == 0
-  elseif t == 'string' then
-    return v == ''
-  elseif t == 'boolean' then
-    return not v
-  elseif t == 'table' then
-    for _, _ in pairs(v) do
-      return false
-    end
-    return true
-  end
-  return false
-end
 
 -- 叶子节点 open hook
 ---@param node Node|nil
@@ -43,12 +19,17 @@ local function on_node_open(node, window_picker)
   -- @提取需要运行的命令
   local args = { 'ssh' }
   if node.config.port then
-    table.insert(args, '-p' .. tostring(node.config.port))
+    vim.list_extend(args, { '-p', tostring(node.config.port) })
   end
   if not empty(node.config.username) then
-    table.insert(args, '-l' .. node.config.username)
+    vim.list_extend(args, { '-l', node.config.username })
+  end
+  if not empty(node.config.private_key_file) then
+    vim.list_extend(args, { '-i', Utils.expand_user(node.config.private_key_file) })
   end
   table.insert(args, node.config.computer_name)
+
+  --notify(vim.inspect(args))
 
   -- @跳到准备渲染的窗口
   local win = type(window_picker) == 'function' and window_picker(node)
@@ -378,10 +359,10 @@ function M.add_folder()
     return
   end
   local new_node = Node.Node.new(true)
-  new_node.config = {
+  new_node.config = vim.tbl_extend('force', {}, {
     display_name = name,
     ['type'] = 'folder',
-  }
+  })
   node:add_child(new_node)
   M.refresh('add')
   M.save_config()
@@ -402,6 +383,7 @@ return {
   port = 22,
   username = '',
   password = '',
+  private_key_file = '',
 }]]
   vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, vim.split(template, '\n', {}))
   vim.api.nvim_set_option_value('filetype', 'lua', { buf = bufnr })
