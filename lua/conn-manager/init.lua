@@ -108,7 +108,7 @@ M.tree = nil
 ---@type Node[]
 M.line_to_node = {}
 ---@type integer
-M.window = -1
+M.bufnr = -1
 ---@type integer[]
 M.windows = {}
 -- kind 'cut'|'copy'
@@ -116,8 +116,14 @@ M.clipboard = { kind = 'cut', node = nil }
 -- namespace
 M.ns_id = vim.api.nvim_create_namespace('conn-manager')
 
+---@param current_tabpage boolean|nil
 ---@return integer
-local function get_win() return M.window end
+local function get_win(current_tabpage)
+  if vim.t.conn_manager and vim.t.conn_manager.winid and vim.t.conn_manager.winid > -1 then
+    return vim.t.conn_manager.winid or -1
+  end
+  return current_tabpage and -1 or (M.windows[1] or -1)
+end
 
 ---@return integer 0 means invalid
 local function get_lnum()
@@ -179,17 +185,22 @@ local function setup_buffer(buffer)
   if Config.config.keymaps then
     setup_keymaps(buffer)
   end
-  vim.api.nvim_create_autocmd('BufUnload', {
+  vim.api.nvim_create_autocmd('WinClosed', {
     buffer = buffer,
     callback = function()
       local win = get_win()
       for i, w in ipairs(M.windows) do
         if w == win then
           table.remove(M.windows, i)
+          local _, tabnr = pcall(vim.api.nvim_win_get_tabpage, w)
+          local ok, state = pcall(vim.api.nvim_tabpage_get_var, tabnr, 'conn_manager')
+          if ok then
+            state.winid = -1
+            vim.api.nvim_tabpage_set_var(tabnr, 'conn_manager', state)
+          end
           break
         end
       end
-      M.window = -1
     end,
   })
   vim.api.nvim_set_option_value('buftype', 'nofile', { buf = buffer })
@@ -218,7 +229,7 @@ local function setup_window(win)
 end
 
 function M.conn_manager_open(focus)
-  local win = get_win()
+  local win = get_win(true)
   if vim.api.nvim_win_is_valid(win) then
     if vim.api.nvim_get_current_win() ~= win then
       vim.api.nvim_set_current_win(win)
@@ -226,18 +237,22 @@ function M.conn_manager_open(focus)
     return win
   end
 
-  local buffer = vim.api.nvim_create_buf(false, true)
-  setup_buffer(buffer)
-  local line_to_node = Render.render(M.ns_id, buffer, M.tree)
-  M.line_to_node = line_to_node
+  local bufnr = M.bufnr
+  if bufnr == -1 or not vim.api.nvim_buf_is_valid(bufnr) then
+    bufnr = vim.api.nvim_create_buf(false, true)
+    setup_buffer(bufnr)
+    local line_to_node = Render.render(M.ns_id, bufnr, M.tree)
+    M.line_to_node = line_to_node
+    M.bufnr = bufnr
+  end
 
-  win = vim.api.nvim_open_win(buffer, focus, M.config.window_config)
+  win = vim.api.nvim_open_win(bufnr, focus, M.config.window_config)
   setup_window(win)
   -- window 实例绑定 tabpage
-  vim.t.conn_manager = vim.t.conn_manager or {}
-  vim.t.conn_manager.winid = win
+  local state = vim.t.conn_manager or {}
+  state.winid = win
+  vim.t.conn_manager = state
   table.insert(M.windows, win)
-  M.window = win
   return win
 end
 
