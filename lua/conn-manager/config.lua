@@ -2,6 +2,7 @@ local M = {}
 
 M.defaults = {
   config_path = 'conn-manager.json',
+  keymaps = true, -- add default keymaps
   window_config = {
     width = 30,
     split = 'left',

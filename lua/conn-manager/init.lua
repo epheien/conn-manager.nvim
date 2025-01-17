@@ -173,7 +173,9 @@ local function setup_keymaps(bufnr)
 end
 
 local function setup_buffer(buffer)
-  setup_keymaps(buffer)
+  if Config.config.keymaps then
+    setup_keymaps(buffer)
+  end
   vim.api.nvim_create_autocmd('BufUnload', {
     buffer = buffer,
     callback = function()
