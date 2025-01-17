@@ -15,7 +15,7 @@ M.Node = Node
 ---@field config table
 ---@field jobs integer[] 打开的终端实例 job_id
 ---@field clip string 'cut' or 'copy'
----@return table
+---@return Node
 function Node.new(expandable)
   local self = setmetatable({}, Node)
   self.parent = nil
@@ -152,7 +152,6 @@ end
 
 function M.new_node_from_conn(conn)
   local node = Node.new(#(conn.children or {}) > 0 or conn.config.type == 'folder')
-  --node.expanded = node.expandable and true or false
   node.config = conn.config
   for _, child in ipairs(conn.children or {}) do
     node:add_child(M.new_node_from_conn(child))
