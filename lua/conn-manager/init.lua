@@ -116,9 +116,12 @@ M.clipboard = { kind = 'cut', node = nil }
 -- namespace
 M.ns_id = vim.api.nvim_create_namespace('conn-manager')
 
+---@return integer
+local function get_win() return M.window end
+
 ---@return integer 0 means invalid
 local function get_lnum()
-  local ok, pos = pcall(vim.api.nvim_win_get_cursor, M.window)
+  local ok, pos = pcall(vim.api.nvim_win_get_cursor, get_win())
   return ok and pos[1] or 0
 end
 
@@ -179,8 +182,9 @@ local function setup_buffer(buffer)
   vim.api.nvim_create_autocmd('BufUnload', {
     buffer = buffer,
     callback = function()
-      for i, win in ipairs(M.windows) do
-        if win == M.window then
+      local win = get_win()
+      for i, w in ipairs(M.windows) do
+        if w == win then
           table.remove(M.windows, i)
           break
         end
@@ -209,16 +213,17 @@ local function setup_window(win)
   vim.api.nvim_set_option_value('number', false, { win = win })
   vim.api.nvim_set_option_value('winfixbuf', true, { win = win })
   if type(M.config.on_window_open) == 'function' then
-    M.config.on_window_open(M.window)
+    M.config.on_window_open(win)
   end
 end
 
 function M.conn_manager_open(focus)
-  if vim.api.nvim_win_is_valid(M.window) then
-    if vim.api.nvim_get_current_win() ~= M.window then
-      vim.api.nvim_set_current_win(M.window)
+  local win = get_win()
+  if vim.api.nvim_win_is_valid(win) then
+    if vim.api.nvim_get_current_win() ~= win then
+      vim.api.nvim_set_current_win(win)
     end
-    return M.window
+    return win
   end
 
   local buffer = vim.api.nvim_create_buf(false, true)
@@ -226,29 +231,31 @@ function M.conn_manager_open(focus)
   local line_to_node = Render.render(M.ns_id, buffer, M.tree)
   M.line_to_node = line_to_node
 
-  M.window = vim.api.nvim_open_win(buffer, focus, M.config.window_config)
-  setup_window(M.window)
+  win = vim.api.nvim_open_win(buffer, focus, M.config.window_config)
+  setup_window(win)
   -- window 实例绑定 tabpage
   vim.t.conn_manager = vim.t.conn_manager or {}
-  vim.t.conn_manager.winid = M.window
-  table.insert(M.windows, M.window)
-  return M.window
+  vim.t.conn_manager.winid = win
+  table.insert(M.windows, win)
+  M.window = win
+  return win
 end
 
 -- TODO: increment
 ---@param event? string
 ---@param force? boolean true 表示强制刷新全部
 function M.refresh(event, force) ---@diagnostic disable-line
-  if not vim.api.nvim_win_is_valid(M.window) then
+  local win = get_win()
+  if not vim.api.nvim_win_is_valid(win) then
     return
   end
-  local bufnr = vim.api.nvim_win_get_buf(M.window)
-  local pos = vim.api.nvim_win_get_cursor(M.window)
+  local bufnr = vim.api.nvim_win_get_buf(win)
+  local pos = vim.api.nvim_win_get_cursor(win)
   M.line_to_node = Render.render(M.ns_id, bufnr, M.tree)
   if pos[1] > vim.api.nvim_buf_line_count(bufnr) then
     pos[1] = vim.api.nvim_buf_line_count(bufnr)
   end
-  vim.api.nvim_win_set_cursor(M.window, pos)
+  vim.api.nvim_win_set_cursor(win, pos)
 end
 
 function M.refresh_node(node)
@@ -258,7 +265,7 @@ function M.refresh_node(node)
 
   local lnum = 0
   if get_node() == node then
-    lnum = vim.api.nvim_win_get_cursor(M.window)[1] -- 快速路径
+    lnum = get_lnum() -- 快速路径
   else
     for ln = 1, #M.line_to_node do
       if M.line_to_node[ln] == node then
@@ -271,15 +278,16 @@ function M.refresh_node(node)
     end
   end
 
+  local win = get_win()
   local msgs = node:render(node:get_depth() - 1)
-  local bufnr = vim.api.nvim_win_get_buf(M.window)
-  local pos = vim.api.nvim_win_get_cursor(M.window)
+  local bufnr = vim.api.nvim_win_get_buf(win)
+  local pos = vim.api.nvim_win_get_cursor(win)
   vim.api.nvim_set_option_value('modifiable', true, { buf = bufnr })
   vim.api.nvim_buf_clear_namespace(bufnr, M.ns_id, lnum - 1, lnum)
   vim.api.nvim_buf_set_lines(bufnr, lnum - 1, lnum, false, { '' })
   require('conn-manager.buffer').echo_to_buffer(M.ns_id, bufnr, lnum, msgs)
   vim.api.nvim_set_option_value('modifiable', false, { buf = bufnr })
-  vim.api.nvim_win_set_cursor(M.window, pos)
+  vim.api.nvim_win_set_cursor(win, pos)
 end
 
 function M.open_in_tab()
