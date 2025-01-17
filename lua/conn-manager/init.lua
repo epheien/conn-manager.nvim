@@ -7,6 +7,7 @@ local Utils = require('conn-manager.utils')
 local M = {}
 
 local function notify_error(msg) vim.notify(msg, vim.log.levels.ERROR) end
+local function notify(msg) vim.notify(msg, vim.log.levels.INFO) end
 
 -- 类似 vim.fn.empty()
 local function empty(v)
@@ -103,6 +104,8 @@ M.tree = nil
 M.line_to_node = {}
 ---@type integer
 M.window = -1
+-- kind 'cut'|'copy'
+M.clipboard = { kind = 'cut', node = nil }
 
 local function get_node()
   local ok, pos = pcall(vim.api.nvim_win_get_cursor, M.window)
@@ -149,6 +152,10 @@ local function setup_keymaps(bufnr)
   vim.keymap.set('n', 'D', M.remove, { buffer = bufnr })
   vim.keymap.set('n', 'r', M.modify, { buffer = bufnr })
   vim.keymap.set('n', 'p', M.goto_parent, { buffer = bufnr })
+  vim.keymap.set('n', 'x', M.cut_node, { buffer = bufnr })
+  vim.keymap.set('n', 'c', M.copy_node, { buffer = bufnr, nowait = true })
+  vim.keymap.set('n', 'P', function() M.paste_node(true) end, { buffer = bufnr })
+  vim.keymap.set('n', 'gp', function() M.paste_node(false) end, { buffer = bufnr })
 end
 
 local function setup_buffer(buffer)
@@ -384,6 +391,76 @@ function M.goto_parent()
       vim.api.nvim_win_set_cursor(0, { i, 0 })
     end
   end
+end
+
+function M.cut_node()
+  local node = get_node()
+  if not node then
+    return
+  end
+  if M.clipboard.node == node then
+    M.clipboard.node = nil
+    notify(string.format('%s removed from clipboard', node))
+  else
+    M.clipboard = { kind = 'cut', node = node }
+    notify(string.format('%s cut to clipboard', node))
+  end
+end
+
+function M.copy_node()
+  local node = get_node()
+  if not node then
+    return
+  end
+  if node.expandable then
+    notify_error('folder node cannot be copied')
+    return
+  end
+  if M.clipboard.node == node then
+    M.clipboard.node = nil
+    notify(string.format('%s removed from clipboard', node))
+  else
+    M.clipboard = { kind = 'copy', node = node }
+    notify(string.format('%s copy to clipboard', node))
+  end
+end
+
+function M.paste_node(before)
+  local clip_kind = M.clipboard.kind
+  local clip_node = M.clipboard.node
+  if empty(clip_node) then
+    return
+  end
+  local node = get_node()
+  if not node then
+    return
+  end
+  if M.clipboard.kind == 'cut' and clip_node == node then
+    return
+  end
+  if node.expandable then
+    if M.clipboard.kind == 'cut' then
+      clip_node.parent:remove_child(clip_node)
+      M.clipboard.node = nil
+    end
+    node:add_child(clip_kind == 'cut' and clip_node or clip_node:clone())
+  else
+    if M.clipboard.kind == 'cut' then
+      clip_node.parent:remove_child(clip_node)
+      M.clipboard.node = nil
+    end
+    for idx, child in ipairs(node.parent.children) do
+      if child == node then
+        node.parent:add_child(
+          clip_kind == 'cut' and clip_node or clip_node:clone(),
+          before and idx or idx + 1
+        )
+        break
+      end
+    end
+  end
+  M.refresh('paste')
+  M.save_config()
 end
 
 return M

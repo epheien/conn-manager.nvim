@@ -44,9 +44,15 @@ function Node:__tostring()
 end
 
 -- 添加子节点
-function Node:add_child(child)
+---@param child Node
+---@param pos? integer
+function Node:add_child(child, pos)
   child.parent = self
-  table.insert(self.children, child)
+  if pos then
+    table.insert(self.children, pos, child)
+  else
+    table.insert(self.children, child)
+  end
 end
 
 -- 移除子节点
@@ -78,6 +84,13 @@ function Node:get_root()
     current = current.parent
   end
   return current
+end
+
+-- 浅 clone, children 不会管
+function Node:clone()
+  local clone_node = Node.new(self.expandable)
+  clone_node.config = vim.deepcopy(self.config)
+  return clone_node
 end
 
 ---render node and it's children
