@@ -33,9 +33,11 @@ local function empty(v)
 end
 
 -- 叶子节点 open hook
----comment
----@param node Node
-local function on_node_open(node)
+---@param node Node|nil
+local function on_node_open(node, window_picker)
+  if not node or node.expandable then
+    return
+  end
   -- @提取需要运行的命令
   local args = { 'ssh' }
   if node.config.port then
@@ -47,7 +49,7 @@ local function on_node_open(node)
   table.insert(args, node.config.computer_name)
 
   -- @跳到准备渲染的窗口
-  local win = Config.config.node.window_picker and Config.config.node.window_picker(node)
+  local win = type(window_picker) == 'function' and window_picker(node)
     or Window.pick_window_for_node_open()
   vim.api.nvim_set_current_win(win)
 
@@ -105,50 +107,57 @@ M.tree = nil
 M.line_to_node = {}
 ---@type integer
 M.window = -1
+---@type integer[]
+M.windows = {}
 -- kind 'cut'|'copy'
 M.clipboard = { kind = 'cut', node = nil }
 -- namespace
 M.ns_id = vim.api.nvim_create_namespace('conn-manager')
 
-local function get_node()
+---@return integer 0 means invalid
+local function get_lnum()
   local ok, pos = pcall(vim.api.nvim_win_get_cursor, M.window)
-  if not ok then
-    return nil
+  return ok and pos[1] or 0
+end
+
+---@return Node|nil
+local function get_node() return M.line_to_node[get_lnum()] end
+
+function M.open()
+  local lnum = get_lnum()
+  local node = get_node()
+  if not node or not node.parent or lnum <= 0 then
+    return
   end
-  return M.line_to_node[pos[1]]
+  if node.expandable then
+    node.expanded = not node.expanded
+    M.refresh('expand')
+  else
+    if type(M.config.node.on_open) == 'function' then
+      M.config.node.on_open(node)
+    else
+      --print(node.config.display_name, node.config.computer_name, node.config.port)
+      on_node_open(node, Config.config.node.window_picker)
+    end
+    M.refresh_node(node)
+  end
+end
+
+function M.inspect()
+  local node = get_node()
+  if node then
+    notify(node:inspect())
+  end
 end
 
 local function setup_keymaps(bufnr)
   bufnr = bufnr or 0
-  vim.keymap.set('n', '<CR>', function()
-    local lnum = vim.api.nvim_win_get_cursor(0)[1]
-    local node = M.line_to_node[lnum]
-    if not node.parent then
-      return
-    end
-    if node.expandable then
-      node.expanded = not node.expanded
-      M.refresh('expand')
-    else
-      if type(M.config.node.on_open) == 'function' then
-        M.config.node.on_open(node)
-      else
-        --print(node.config.display_name, node.config.computer_name, node.config.port)
-        on_node_open(node)
-      end
-      M.refresh_node(node)
-    end
-  end, { buffer = bufnr })
-
+  vim.keymap.set('n', '<CR>', M.open, { buffer = bufnr })
   -- 使用 LeftRelease 触发, 可避免双击连接 ssh 后, 在终端退出插入模式的问题
   vim.keymap.set('n', '<2-LeftRelease>', '<CR>', { remap = true, silent = true, buffer = bufnr })
   vim.keymap.set('n', '<2-LeftMouse>', '<Nop>', { silent = true, buffer = bufnr })
-
-  vim.keymap.set('n', 'i', function()
-    local node = M.line_to_node[vim.api.nvim_win_get_cursor(0)[1]]
-    vim.notify(node:inspect())
-  end, { buffer = bufnr })
-
+  vim.keymap.set('n', 'i', M.inspect, { buffer = bufnr })
+  vim.keymap.set('n', '<C-t>', M.open_in_tab, { buffer = bufnr })
   vim.keymap.set('n', 'R', M.refresh, { buffer = bufnr })
   vim.keymap.set('n', 'a', M.add_node, { buffer = bufnr })
   vim.keymap.set('n', 'A', M.add_folder, { buffer = bufnr })
@@ -165,7 +174,15 @@ local function setup_buffer(buffer)
   setup_keymaps(buffer)
   vim.api.nvim_create_autocmd('BufUnload', {
     buffer = buffer,
-    callback = function() M.window = -1 end,
+    callback = function()
+      for i, win in ipairs(M.windows) do
+        if win == M.window then
+          table.remove(M.windows, i)
+          break
+        end
+      end
+      M.window = -1
+    end,
   })
   vim.api.nvim_set_option_value('buftype', 'nofile', { buf = buffer })
   vim.api.nvim_set_option_value('swapfile', false, { buf = buffer })
@@ -192,7 +209,7 @@ local function setup_window(win)
   end
 end
 
-function M.open(focus)
+function M.conn_manager_open(focus)
   if vim.api.nvim_win_is_valid(M.window) then
     if vim.api.nvim_get_current_win() ~= M.window then
       vim.api.nvim_set_current_win(M.window)
@@ -207,6 +224,10 @@ function M.open(focus)
 
   M.window = vim.api.nvim_open_win(buffer, focus, M.config.window_config)
   setup_window(M.window)
+  -- window 实例绑定 tabpage
+  vim.t.conn_manager = vim.t.conn_manager or {}
+  vim.t.conn_manager.winid = M.window
+  table.insert(M.windows, M.window)
   return M.window
 end
 
@@ -257,6 +278,12 @@ function M.refresh_node(node)
   vim.api.nvim_win_set_cursor(M.window, pos)
 end
 
+function M.open_in_tab()
+  local node = get_node()
+  on_node_open(node, function() vim.cmd('tabnew') end)
+  M.refresh_node(node)
+end
+
 function M.setup(opts)
   opts = opts or {}
   M.config = Config.setup(opts)
@@ -267,7 +294,11 @@ function M.setup(opts)
   end
   M.tree = tree
 
-  vim.api.nvim_create_user_command('ConnManagerOpen', function() M.open() end, { nargs = 0 })
+  vim.api.nvim_create_user_command(
+    'ConnManagerOpen',
+    function() M.conn_manager_open() end,
+    { nargs = 0 }
+  )
 end
 
 function M.remove()
