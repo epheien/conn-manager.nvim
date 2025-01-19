@@ -115,7 +115,7 @@ end
 ---@return Node|nil
 local function get_node() return M.line_to_node[get_lnum()] end
 
-function M.open()
+function M.open(opts)
   local lnum = get_lnum()
   local node = get_node()
   if not node or not node.parent or lnum <= 0 then
@@ -125,11 +125,12 @@ function M.open()
     node.expanded = not node.expanded
     M.refresh('expand')
   else
+    local fallback = function() on_node_open(node, Config.config.node.window_picker) end
     if type(M.config.node.on_open) == 'function' then
-      M.config.node.on_open(node)
+      M.config.node.on_open(node, fallback, opts)
     else
       --print(node.config.display_name, node.config.computer_name, node.config.port)
-      on_node_open(node, Config.config.node.window_picker)
+      fallback()
     end
     M.refresh_node(node)
   end
