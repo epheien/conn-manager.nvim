@@ -82,7 +82,9 @@ function M.get_max_width_winnr()
   return result
 end
 
-function M.pick_window_for_node_open()
+---@param split? boolean defaut true, split a new window
+---@return integer
+function M.pick_window_for_node_open(split)
   local prev_winnr = vim.fn.winnr('#')
   if M.is_window_usable(prev_winnr) then
     return vim.fn.win_getid(prev_winnr)
@@ -90,6 +92,9 @@ function M.pick_window_for_node_open()
   local winnr = M.get_first_usable_winnr()
   if winnr > 0 then
     return vim.fn.win_getid(winnr)
+  end
+  if split == false then
+    return 0
   end
 
   -- 跳到最大宽度的窗口以准备分割
