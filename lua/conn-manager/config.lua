@@ -22,6 +22,19 @@ M.defaults = {
       terminal_conn = ' ',
     },
   },
+  help = {
+    cursorline = true,
+    sort_by = 'key',
+    winhl = 'NormalFloat:Normal',
+    window_config = {
+      relative = 'editor',
+      border = 'single',
+      row = 1,
+      col = 0,
+      style = 'minimal',
+      noautocmd = true,
+    },
+  },
 }
 
 M.config = M.defaults

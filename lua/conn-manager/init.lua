@@ -145,22 +145,29 @@ end
 
 local function setup_keymaps(bufnr)
   bufnr = bufnr or 0
-  vim.keymap.set('n', '<CR>', M.open, { buffer = bufnr })
+  local opts = function(desc, o)
+    return vim.tbl_deep_extend('force', {
+      desc = desc,
+      buffer = bufnr,
+    }, o or {})
+  end
+  vim.keymap.set('n', '<CR>', M.open, opts('Open'))
   -- 使用 LeftRelease 触发, 可避免双击连接 ssh 后, 在终端退出插入模式的问题
-  vim.keymap.set('n', '<2-LeftRelease>', '<CR>', { remap = true, silent = true, buffer = bufnr })
-  vim.keymap.set('n', '<2-LeftMouse>', '<Nop>', { silent = true, buffer = bufnr })
-  vim.keymap.set('n', 'i', M.inspect, { buffer = bufnr })
-  vim.keymap.set('n', '<C-t>', M.open_in_tab, { buffer = bufnr })
-  vim.keymap.set('n', 'R', M.refresh, { buffer = bufnr })
-  vim.keymap.set('n', 'a', M.add_node, { buffer = bufnr })
-  vim.keymap.set('n', 'A', M.add_folder, { buffer = bufnr })
-  vim.keymap.set('n', 'D', M.remove, { buffer = bufnr })
-  vim.keymap.set('n', 'r', M.modify, { buffer = bufnr })
-  vim.keymap.set('n', 'p', M.goto_parent, { buffer = bufnr })
-  vim.keymap.set('n', 'x', M.cut_node, { buffer = bufnr })
-  vim.keymap.set('n', 'c', M.copy_node, { buffer = bufnr, nowait = true })
-  vim.keymap.set('n', 'P', function() M.paste_node(true) end, { buffer = bufnr })
-  vim.keymap.set('n', 'gp', function() M.paste_node(false) end, { buffer = bufnr })
+  vim.keymap.set('n', '<2-LeftRelease>', '<CR>', opts('Open', { remap = true, silent = true }))
+  vim.keymap.set('n', '<2-LeftMouse>', '<Nop>', opts('<Nop>', { silent = true }))
+  vim.keymap.set('n', 'i', M.inspect, opts('Inspect'))
+  vim.keymap.set('n', '<C-t>', M.open_in_tab, opts('Open in Tab'))
+  vim.keymap.set('n', 'R', M.refresh, opts('Refresh'))
+  vim.keymap.set('n', 'a', M.add_node, opts('Add Node'))
+  vim.keymap.set('n', 'A', M.add_folder, opts('Add Folder'))
+  vim.keymap.set('n', 'D', M.remove, opts('Remove'))
+  vim.keymap.set('n', 'r', M.modify, opts('Modify'))
+  vim.keymap.set('n', 'p', M.goto_parent, opts('Goto Parent'))
+  vim.keymap.set('n', 'x', M.cut_node, opts('Cut'))
+  vim.keymap.set('n', 'c', M.copy_node, opts('Copy'))
+  vim.keymap.set('n', 'P', function() M.paste_node(true) end, opts('Paste before Cursor'))
+  vim.keymap.set('n', 'gp', function() M.paste_node(false) end, opts('Paste after Cursor'))
+  vim.keymap.set('n', '?', require('conn-manager.help').toggle, opts('Help'))
 end
 
 local function setup_buffer(buffer)
