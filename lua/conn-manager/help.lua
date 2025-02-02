@@ -33,8 +33,6 @@ local function tidy_lhs(lhs)
   return lhs
 end
 
---- Remove prefix 'nvim-tree: '
---- Hardcoded to keep default_on_attach simple
 ---@param desc string
 ---@return string
 local function tidy_desc(desc) return desc or '' end
@@ -118,9 +116,9 @@ local function compute(map)
 
   -- header highlight, assume one character keys
   local hl = {
-    { 'NvimTreeFolderName', 0, 0, #head_lhs },
-    { 'NvimTreeFolderName', 0, width - 1, width },
-    { 'NvimTreeFolderName', 1, width - 1, width },
+    { 'ConnManagerFolder', 0, 0, #head_lhs },
+    { 'ConnManagerFolder', 0, width - 1, width },
+    { 'ConnManagerFolder', 1, width - 1, width },
   }
 
   -- mappings, left padded 1
@@ -132,7 +130,7 @@ local function compute(map)
     width = math.max(#line, width)
 
     -- highlight lhs
-    table.insert(hl, { 'NvimTreeFolderName', i + 1, 1, #l.lhs + 1 })
+    table.insert(hl, { 'ConnManagerFolder', i + 1, 1, #l.lhs + 1 })
   end
 
   return lines, hl, width
@@ -188,7 +186,6 @@ local function open()
     })
   )
 
-  -- style it a bit like the tree
   vim.wo[M.winnr].winhl = config.help.winhl
   vim.wo[M.winnr].cursorline = config.help.cursorline
 
