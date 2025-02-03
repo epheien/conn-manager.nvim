@@ -341,7 +341,7 @@ function M.remove()
     return
   end
   local choice =
-    vim.fn.confirm(string.format('Delete %s?', node.config.display_name), '&Yes\n&No\n&Cancel')
+    vim.fn.confirm(string.format('Delete %s?', node.config.display_name), '&Yes\n&No', 2)
   if choice == 1 then
     node.parent:remove_child(node)
     M.refresh('remove')
