@@ -250,6 +250,13 @@ function M.conn_manager_open(focus)
   return win
 end
 
+function M.conn_manager_close()
+  local win = get_win(true)
+  if vim.api.nvim_win_is_valid(win) then
+    vim.api.nvim_win_close(win, false)
+  end
+end
+
 -- TODO: increment
 ---@param event? string
 ---@param force? boolean true 表示强制刷新全部
@@ -331,6 +338,11 @@ function M.setup(opts)
   vim.api.nvim_create_user_command(
     'ConnManagerOpen',
     function() M.conn_manager_open() end,
+    { nargs = 0 }
+  )
+  vim.api.nvim_create_user_command(
+    'ConnManagerClose',
+    function() M.conn_manager_close() end,
     { nargs = 0 }
   )
 end
