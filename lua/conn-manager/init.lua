@@ -375,7 +375,7 @@ end
 
 function M.add_folder()
   local node = get_node()
-  if not node or not node.expandable then
+  if not node then
     return
   end
   local name = vim.fn.input('Folder name')
@@ -387,14 +387,14 @@ function M.add_folder()
     display_name = name,
     ['type'] = 'folder',
   })
-  node:add_child(new_node)
+  node:add_child_or_sibling(new_node)
   M.refresh('add')
   M.save_config()
 end
 
 function M.add_node()
   local node = get_node()
-  if not node or not node.expandable then
+  if not node then
     return
   end
   local bufnr, _ = Utils.create_scratch_floatwin('conn-manager add connection')
@@ -416,7 +416,7 @@ return {
     buffer_save_action(node, function(n, config)
       config['type'] = 'terminal'
       local new_node = Node.new_node_from_conn({ config = config })
-      n:add_child(new_node)
+      n:add_child_or_sibling(new_node)
       M.refresh('add')
       M.save_config()
     end)

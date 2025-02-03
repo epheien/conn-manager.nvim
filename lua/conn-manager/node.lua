@@ -64,6 +64,20 @@ function Node:add_child(child, pos)
   end
 end
 
+--- 如果是目录则直接 add_child, 否则就添加到叶子节点的后面
+---@param node Node
+function Node:add_child_or_sibling(node)
+  if self.expanded then
+    self:add_child(node)
+    return
+  end
+  for idx, child in ipairs(self.parent.children) do
+    if child == self then
+      self.parent:add_child(node, idx + 1)
+    end
+  end
+end
+
 -- 移除子节点
 function Node:remove_child(child)
   for i, c in ipairs(self.children) do
