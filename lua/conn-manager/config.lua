@@ -35,6 +35,9 @@ M.defaults = {
       noautocmd = true,
     },
   },
+  filter = {
+    prefix = '[FILTER]: ',
+  },
 }
 
 M.config = M.defaults

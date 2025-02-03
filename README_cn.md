@@ -3,7 +3,7 @@ nvim 下的 ssh 连接管理器
 
 ## TODO
 - [ ] - 完善文档
-- [ ] - filter 功能
+- [x] - filter 功能
 - [ ] - 密码加密/解密
 - [x] - 快捷键帮助信息
 - [x] - 实现一个基于 winbar 作为标签页的 window picker (因为无法完全重定向窗口关闭行为, 所以理论上无法完美实现, 改用open_in_tab)
