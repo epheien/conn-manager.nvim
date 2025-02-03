@@ -6,6 +6,8 @@ local Utils = require('conn-manager.utils')
 
 local M = {}
 
+M.filter_pattern = ''
+
 local empty = Utils.empty
 local function notify_error(msg) vim.notify(msg, vim.log.levels.ERROR) end
 local function notify(msg) vim.notify(msg, vim.log.levels.INFO) end
@@ -167,6 +169,7 @@ local function setup_keymaps(bufnr)
   vim.keymap.set('n', 'c', M.copy_node, opts('Copy'))
   vim.keymap.set('n', 'P', function() M.paste_node(true) end, opts('Paste before Cursor'))
   vim.keymap.set('n', 'gp', function() M.paste_node(false) end, opts('Paste after Cursor'))
+  vim.keymap.set('n', 'f', M.live_filter, opts('Live Filter'))
   vim.keymap.set('n', '?', require('conn-manager.help').toggle, opts('Help'))
 end
 
@@ -255,7 +258,18 @@ function M.refresh(event, force) ---@diagnostic disable-line
   end
   local bufnr = vim.api.nvim_win_get_buf(win)
   local pos = vim.api.nvim_win_get_cursor(win)
-  M.line_to_node = Render.render(M.ns_id, bufnr, M.tree)
+  M.line_to_node = Render.render(M.ns_id, bufnr, M.tree, {
+    filter = function(node)
+      if empty(M.filter_pattern) or type(M.filter_pattern) ~= 'string' then
+        return true
+      end
+      return (vim.regex(M.filter_pattern):match_str(node.config.display_name))
+    end,
+    root_line = not empty(M.filter_pattern) and {
+      { '[FILTER]: ', 'ConnManagerLiveFilterPrefix' },
+      { M.filter_pattern, 'ConnManagerLiveFilterValue' },
+    } or nil,
+  })
   if pos[1] > vim.api.nvim_buf_line_count(bufnr) then
     pos[1] = vim.api.nvim_buf_line_count(bufnr)
   end
@@ -563,6 +577,16 @@ function M.paste_node(before)
   end
   M.refresh('paste')
   M.save_config()
+end
+
+function M.live_filter()
+  vim.ui.input({ prompt = '[FILTER]: ', default = M.filter_pattern }, function(input)
+    if not input then
+      return
+    end
+    M.filter_pattern = input
+    M.refresh()
+  end)
 end
 
 return M

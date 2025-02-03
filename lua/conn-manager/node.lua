@@ -106,19 +106,32 @@ end
 ---@param indent? integer
 ---@param lines? string[]
 ---@param line_to_node? table[]
+---@param filter? function
 ---@return string[]|table[]
 ---@return table[]
-function Node:deep_render(indent, lines, line_to_node)
+function Node:deep_render(indent, lines, line_to_node, filter)
   indent = indent or 0
   lines = lines or {}
   line_to_node = line_to_node or {}
+  local child_render_count = 0
+  -- filter leaf node
+  if filter and not self.expandable and not filter(self) then
+    goto out
+  end
   table.insert(lines, self:render(indent))
   table.insert(line_to_node, self)
-  if not self.expanded then
+  if not filter and not self.expanded then
     goto out
   end
   for _, child in ipairs(self.children) do
-    child:deep_render(indent + 1, lines, line_to_node)
+    local prev = #lines
+    child:deep_render(indent + 1, lines, line_to_node, filter)
+    child_render_count = child_render_count + #lines - prev
+  end
+  -- 如果子节点全部被过滤了, 那么这个目录也不再显示
+  if self.expandable and child_render_count == 0 and filter then
+    table.remove(lines, #lines)
+    table.remove(line_to_node, #line_to_node)
   end
   ::out::
   return lines, line_to_node
