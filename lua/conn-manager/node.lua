@@ -218,6 +218,9 @@ function M.read_config(fname)
   local file = io.open(fname, 'r')
   assert(file, 'failed to load config from ' .. fname)
   local text = file:read('*a')
+  if Config.config.save.on_read then
+    text = Config.config.save.on_read(text)
+  end
   local config = vim.json.decode(text)
   return config
 end

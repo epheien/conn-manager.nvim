@@ -38,6 +38,10 @@ M.defaults = {
   filter = {
     prefix = '[FILTER]: ',
   },
+  save = {
+    on_read = nil,  -- read hook, (text: string) -> string
+    on_write = nil, -- write hook, (text: string) -> string|nil
+  }
 }
 
 M.config = M.defaults

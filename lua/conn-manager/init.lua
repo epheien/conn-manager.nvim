@@ -463,6 +463,12 @@ function M.save_config()
     connections = conn.children,
   }
   local content = vim.json.encode(config)
+  if Config.config.save.on_write then
+    content = Config.config.save.on_write(content)
+  end
+  if not content then
+    return
+  end
   local temp = Config.config.config_file .. '.tmp'
   local file = io.open(temp, 'w')
   if not file then
