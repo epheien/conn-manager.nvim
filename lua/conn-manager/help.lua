@@ -155,6 +155,7 @@ local function open()
 
   -- fetch all mappings or current buffer
   local map = vim.api.nvim_buf_get_keymap(0, '')
+  map = vim.tbl_filter(function(v) return v.desc and v.desc ~= '' end, map)
 
   -- text and highlight
   local lines, hl, width = compute(map)
