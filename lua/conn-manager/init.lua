@@ -3,6 +3,9 @@ local Node = require('conn-manager.node')
 local Render = require('conn-manager.render')
 local Window = require('conn-manager.window')
 local Utils = require('conn-manager.utils')
+local StaticText = require('conn-manager.ntui.static-text')
+local SingleText = require('conn-manager.ntui.single-text')
+local Dialog = require('conn-manager.ntui.dialog')
 
 local M = {}
 
@@ -366,16 +369,7 @@ function M.remove()
   end
 end
 
-local function buffer_save_action(node, post_func)
-  local bufnr = vim.api.nvim_get_current_buf()
-  local winid = vim.api.nvim_get_current_win()
-  local lines = vim.api.nvim_buf_get_lines(bufnr, 0, -1, false)
-  local content = table.concat(lines, '\n')
-  local config = loadstring(content)()
-  if not config or type(config) ~= 'table' then
-    notify_error('failed to parse content')
-    return
-  end
+local function validate_node_config(config)
   if empty(config.display_name) then
     notify_error('display_name cannot be empty')
     return
@@ -384,10 +378,7 @@ local function buffer_save_action(node, post_func)
     notify_error('computer_name cannot be empty')
     return
   end
-  if type(post_func) == 'function' then
-    post_func(node, config)
-  end
-  vim.api.nvim_win_close(winid, false)
+  return true
 end
 
 function M.add_folder()
@@ -414,31 +405,26 @@ function M.add_node()
   if not node then
     return
   end
-  local bufnr, _ = Utils.create_scratch_floatwin('conn-manager add connection')
-  local template = [[
--- press <C-s> or <C-w>s to save
-return {
-  display_name = '',
-  description = '',
-  computer_name = '', -- aka. hostname, also can be IP
-  port = 22,
-  username = '',
-  password = '',
-  private_key_file = '',
-}]]
-  vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, vim.split(template, '\n', {}))
-  vim.api.nvim_set_option_value('filetype', 'lua', { buf = bufnr })
-
-  vim.keymap.set('n', '<C-s>', function()
-    buffer_save_action(node, function(n, config)
-      config['type'] = 'terminal'
-      local new_node = Node.new_node_from_conn({ config = config })
-      n:add_child_or_sibling(new_node)
-      M.refresh('add')
-      M.save_config()
-    end)
-  end, { buffer = bufnr })
-  vim.keymap.set('n', '<C-w>s', '<C-s>', { buffer = bufnr, remap = true, silent = true })
+  local template = {
+    display_name = '',
+    description = '',
+    computer_name = '',
+    port = 22,
+    username = '',
+    password = '',
+    private_key_file = '',
+    type = 'terminal',
+  }
+  M.create_modify_dialog(node, template, 'conn-manager add connection', function(n, config)
+    if not validate_node_config(config) then
+      return
+    end
+    local new_node = Node.new_node_from_conn({ config = config })
+    n:add_child_or_sibling(new_node)
+    M.refresh('add')
+    M.save_config()
+    return true
+  end)
 end
 
 function M.modify()
@@ -458,20 +444,15 @@ function M.modify()
     end
     return
   end
-
-  local bufnr, _ = Utils.create_scratch_floatwin('conn-manager modify connection')
-  local template = 'return ' .. vim.inspect(node.config)
-  vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, vim.split(template, '\n', {}))
-  vim.api.nvim_set_option_value('filetype', 'lua', { buf = bufnr })
-
-  vim.keymap.set('n', '<C-s>', function()
-    buffer_save_action(node, function(n, config)
-      n.config = config
-      M.refresh_node(node)
-      M.save_config()
-    end)
-  end, { buffer = bufnr })
-  vim.keymap.set('n', '<C-w>s', '<C-s>', { buffer = bufnr, remap = true, silent = true })
+  M.create_modify_dialog(node, node.config, 'conn-manager modify connection', function(n, config)
+    if not validate_node_config(config) then
+      return
+    end
+    n.config = vim.tbl_deep_extend('force', n.config, config)
+    M.refresh_node(n)
+    M.save_config()
+    return true
+  end)
 end
 
 function M.save_config()
@@ -617,6 +598,60 @@ function M.live_filter()
     M.filter_regex = vim.regex(M.filter_pattern)
     M.refresh()
   end)
+end
+
+local function to_title_case(str)
+  -- 替换下划线为空格，并将每个单词首字母大写
+  local s = str
+    :gsub('_', ' ')
+    :gsub('(%w)(%w*)', function(first, rest) return first:upper() .. rest end)
+  return s
+end
+
+---@param strs string[]
+local function max_width(strs)
+  local width = 0
+  for _, str in ipairs(strs) do
+    width = math.max(width, vim.api.nvim_strwidth(str))
+  end
+  return width
+end
+
+function M.create_modify_dialog(node, config, title, on_save)
+  local dialog = Dialog.new(title)
+  dialog.priv = node
+  dialog:add_component(StaticText.new('press <C-s> or <C-w>s to save, q to quit', 'Comment'))
+  local keys = {
+    'display_name',
+    --'type',
+    'computer_name',
+    'port',
+    'description',
+    'username',
+    'password',
+    'private_key_file',
+  }
+  local width = max_width(keys)
+  for _, k in ipairs(keys) do
+    local v = config[k]
+    local label = vim.fn.printf('%*s', width, to_title_case(k)) ---@diagnostic disable-line
+    local obj = SingleText.new(label, v)
+    obj.priv = k
+    obj.indent = 2
+    dialog:add_component(obj)
+  end
+  dialog:open_win({
+    on_save = function(dlg)
+      local result = {}
+      for _, object in ipairs(dlg.components) do
+        if object.priv then
+          result[object.priv] = object.value
+        end
+      end
+      result.port = tonumber(result.port)
+      return on_save(dlg.priv, result)
+    end,
+  })
 end
 
 return M
