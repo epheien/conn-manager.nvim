@@ -9,7 +9,7 @@ Example setup for lazy.nvim
 ```lua
 {
   'epheien/conn-manager.nvim',
-  cmd = 'ConnManagerOpen',
+  cmd = 'ConnManager',
   config = function()
     require('conn-manager').setup({
       config_file = vim.fs.joinpath(vim.fn.stdpath('config') --[[@as string]], 'conn-manager.json'),

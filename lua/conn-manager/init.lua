@@ -335,16 +335,21 @@ function M.setup(opts)
 
   require('conn-manager.highlights').setup()
 
-  vim.api.nvim_create_user_command(
-    'ConnManagerOpen',
-    function() M.conn_manager_open() end,
-    { nargs = 0 }
-  )
-  vim.api.nvim_create_user_command(
-    'ConnManagerClose',
-    function() M.conn_manager_close() end,
-    { nargs = 0 }
-  )
+  vim.api.nvim_create_user_command('ConnManager', function(arg)
+    if arg.fargs[1] == 'open' then
+      M.conn_manager_open()
+    elseif arg.fargs[1] == 'close' then
+      M.conn_manager_close()
+    elseif arg.fargs[1] == 'toggle' then
+      if vim.api.nvim_win_is_valid(get_win(true)) then
+        M.conn_manager_close()
+      else
+        M.conn_manager_open()
+      end
+    else
+      M.conn_manager_open(true)
+    end
+  end, { nargs = '*', complete = function() return { 'open', 'close', 'toggle' } end })
 end
 
 function M.remove()
