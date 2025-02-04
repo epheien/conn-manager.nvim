@@ -87,7 +87,7 @@ Read `setup_keymaps` function in `lua/conn-manager/init.lua` for detail.
 You can press `?` to open keymaps help window in `ConnManager` buffer.
 
 ## Example Configuration
-<details><summary>`lua/plugins/conn-manager.lua`</summary>
+<details><summary>lua/plugins/conn-manager.lua</summary>
 
 ```lua
 local function on_node_open(node, fallback, opts) ---@diagnostic disable-line
@@ -206,7 +206,7 @@ return {
 
 ## Menu Support
 Install `https://github.com/nvzone/menu` and add this configuration.
-<details><summary>`lua/menus/conn-manager.lua`</summary>
+<details><summary>lua/menus/conn-manager.lua</summary>
 
 ```lua
 return {
