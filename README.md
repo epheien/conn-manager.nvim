@@ -205,7 +205,7 @@ return {
 </details>
 
 ## Menu Support
-Install `https://github.com/nvzone/menu` and add this configuration.
+Install [menu](https://github.com/nvzone/menu) and add this configuration.
 <details><summary>lua/menus/conn-manager.lua</summary>
 
 ```lua
