@@ -116,7 +116,7 @@ function Dialog:open_win(opts)
   vim.keymap.set('n', 'a', '<CR>', { buffer = bufnr, remap = true })
   vim.keymap.set('n', 'A', '<CR>', { buffer = bufnr, remap = true })
   vim.keymap.set('n', '<2-LeftRelease>', '<NOP>', { buffer = bufnr, remap = false })
-  vim.keymap.set('n', 'r', function() self:refresh() end, { buffer = bufnr })
+  vim.keymap.set('n', 'R', function() self:refresh() end, { buffer = bufnr })
   vim.keymap.set('n', '<C-w>s', '<C-s>', { buffer = bufnr, remap = true })
   vim.keymap.set('n', '<C-s>', function()
     if opts.on_save then
