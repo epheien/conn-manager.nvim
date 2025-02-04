@@ -83,8 +83,8 @@ Run `:ConnManager` in neovim, and press `a` to start. Press `?` for keymaps help
 ```
 
 ## Default Keymaps
-Read `setup_keymaps` function in `lua/conn-manager/init.lua` for detail.
 You can press `?` to open keymaps help window in `ConnManager` buffer.
+Read `setup_keymaps` function in `lua/conn-manager/init.lua` for detail.
 
 ## Example Configuration
 <details><summary>lua/plugins/conn-manager.lua</summary>
