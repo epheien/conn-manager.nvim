@@ -19,6 +19,12 @@ function SingleText.new(label, value)
   return self
 end
 
+---@param include_indent boolean
+---@return integer
+function SingleText:get_label_display_width(include_indent)
+  return (include_indent and self.indent or 0) + vim.api.nvim_strwidth(self.label) + 2
+end
+
 ---@return table a list of {text, hl_group}
 function SingleText:render()
   local chunks = {}

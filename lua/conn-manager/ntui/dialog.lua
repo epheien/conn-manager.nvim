@@ -1,4 +1,6 @@
 local buffer = require('conn-manager.buffer')
+local utils = require('conn-manager.utils')
+
 local M = {}
 
 M.ns_id = vim.api.nvim_create_namespace('ntui.Dialog')
@@ -59,9 +61,14 @@ function Dialog:on_click()
   if object.type ~= 'SingleText' then
     return
   end
-  vim.ui.input({
-    prompt = vim.trim(object.label) .. ': ',
-    default = object.value,
+  local label_width = object:get_label_display_width(true)
+  utils.overlay_input({
+    default = tostring(object.value),
+    window_config = {
+      row = lnum - 1,
+      col = label_width,
+      width = math.max(vim.api.nvim_win_get_width(self.winid) - label_width, 1),
+    },
   }, function(input)
     if not input or object.value == input then
       return
@@ -109,6 +116,7 @@ function Dialog:open_win(opts)
   vim.keymap.set('n', 'a', '<CR>', { buffer = bufnr, remap = true })
   vim.keymap.set('n', 'A', '<CR>', { buffer = bufnr, remap = true })
   vim.keymap.set('n', '<2-LeftRelease>', '<NOP>', { buffer = bufnr, remap = false })
+  vim.keymap.set('n', 'r', function() self:refresh() end, { buffer = bufnr })
   vim.keymap.set('n', '<C-w>s', '<C-s>', { buffer = bufnr, remap = true })
   vim.keymap.set('n', '<C-s>', function()
     if opts.on_save then

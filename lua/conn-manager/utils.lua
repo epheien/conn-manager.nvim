@@ -77,7 +77,47 @@ function M.expand_user(path)
   if M.empty(home) then
     return path
   end
-  return (path:gsub("^~/", home .. '/'))
+  return (path:gsub('^~/', home .. '/'))
+end
+
+---@param opts table { default = '', window_config = {} }
+---@param on_confirm function
+function M.overlay_input(opts, on_confirm)
+  local bufnr = vim.api.nvim_create_buf(false, true)
+  if opts.default then
+    vim.api.nvim_buf_set_lines(bufnr, 0, 1, false, { opts.default })
+  end
+  local winid = vim.api.nvim_open_win(
+    bufnr,
+    true,
+    vim.tbl_deep_extend('force', {
+      relative = 'win',
+      row = 0,
+      col = 0,
+      width = 78,
+      height = 1,
+      border = 'none',
+    }, opts.window_config or {})
+  )
+  vim.wo.number = false
+  vim.bo.bufhidden = 'wipe'
+  local confirm = function(cancel)
+    local line = vim.api.nvim_get_current_line()
+    if not cancel and on_confirm then
+      on_confirm(line)
+    end
+    vim.cmd.stopinsert() -- NOTE: tirgger InsertLeave event to close window
+  end
+  local o = { buffer = bufnr or true }
+  vim.keymap.set('i', '<CR>', confirm, o)
+  vim.keymap.set('i', '<C-c>', '<Esc>', o)
+  vim.keymap.set('i', '<C-o>', '<Esc>', o)
+  vim.keymap.set('i', '<Esc>', function() confirm(true) end, o)
+  vim.api.nvim_create_autocmd({ 'WinLeave', 'InsertLeave' }, {
+    buffer = bufnr,
+    callback = function() vim.api.nvim_win_close(winid, false) end,
+  })
+  vim.api.nvim_feedkeys('A', 'n', false)
 end
 
 return M
