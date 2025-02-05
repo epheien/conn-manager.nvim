@@ -89,6 +89,7 @@ local function on_node_open(node, window_picker)
       M.refresh_node(node)
     end,
   })
+  vim.b['conn_manager_title'] = node.config.display_name
   local job = { id = jobid, bufnr = vim.api.nvim_get_current_buf() }
   table.insert(node.jobs, job)
   table.insert(M.tree.jobs, job)
