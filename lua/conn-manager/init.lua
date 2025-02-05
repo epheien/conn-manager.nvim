@@ -16,6 +16,17 @@ local empty = Utils.empty
 local function notify_error(msg) vim.notify(msg, vim.log.levels.ERROR) end
 local function notify(msg) vim.notify(msg, vim.log.levels.INFO) end
 
+---@param jobs job[]
+---@param job_id integer
+local function remove_job_by_id(jobs, job_id)
+  for i, job in ipairs(jobs) do
+    if job.id == job_id then
+      table.remove(jobs, i)
+      break
+    end
+  end
+end
+
 -- 叶子节点 open hook
 ---@param node Node|nil
 local function on_node_open(node, window_picker)
@@ -73,16 +84,14 @@ local function on_node_open(node, window_picker)
     on_stdout = make_callback({ done = false }),
     on_exit = function(job_id, exit_code, event) ---@diagnostic disable-line: unused-local
       --print(node.jobs, job_id, event, exit_code)
-      for i, id in ipairs(node.jobs) do
-        if id == job_id then
-          table.remove(node.jobs, i)
-          break
-        end
-      end
+      remove_job_by_id(node.jobs, job_id)
+      remove_job_by_id(M.tree.jobs, job_id)
       M.refresh_node(node)
     end,
   })
-  table.insert(node.jobs, jobid)
+  local job = { id = jobid, bufnr = vim.api.nvim_get_current_buf() }
+  table.insert(node.jobs, job)
+  table.insert(M.tree.jobs, job)
   --vim.cmd.startinsert()
 
   --print(jobid, vim.inspect(args))

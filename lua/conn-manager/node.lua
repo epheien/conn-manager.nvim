@@ -8,6 +8,10 @@ local clip_hl = {
   cut = 'ConnManagerCutHL',
 }
 
+---@class job
+---@field id integer
+---@field bufnr integer
+
 ---@class Node
 ---@field parent Node
 ---@field children Node[]
@@ -15,7 +19,7 @@ local clip_hl = {
 ---@field expandable boolean
 ---@field data any private data
 ---@field config ConnectionConfig
----@field jobs integer[] 打开的终端实例 job_id
+---@field jobs job[] 打开的终端实例
 ---@field clip string 'cut' or 'copy'
 local Node = {}
 Node.__index = Node
