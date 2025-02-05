@@ -94,7 +94,7 @@ function M.pick_window_for_node_open(split)
     return vim.fn.win_getid(winnr)
   end
   if split == false then
-    return 0
+    return -1
   end
 
   -- 跳到最大宽度的窗口以准备分割
