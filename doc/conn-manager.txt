@@ -4,16 +4,17 @@
 Table of Contents                             *conn-manager-table-of-contents*
 
 1. conn-manager.nvim                          |conn-manager-conn-manager.nvim|
-  - Screenshot                     |conn-manager-conn-manager.nvim-screenshot|
-  - Setup                               |conn-manager-conn-manager.nvim-setup|
-  - Usage                               |conn-manager-conn-manager.nvim-usage|
-  - Commands                         |conn-manager-conn-manager.nvim-commands|
-  - Default Keymaps           |conn-manager-conn-manager.nvim-default-keymaps|
-  - Default Configuration|conn-manager-conn-manager.nvim-default-configuration|
-  - Example Configuration|conn-manager-conn-manager.nvim-example-configuration|
-  - Highlight Groups         |conn-manager-conn-manager.nvim-highlight-groups|
-  - Menu Support                 |conn-manager-conn-manager.nvim-menu-support|
-  - Attention                       |conn-manager-conn-manager.nvim-attention|
+  - Screenshot                                       |conn-manager-screenshot|
+  - Requirements                                   |conn-manager-requirements|
+  - Setup                                                 |conn-manager-setup|
+  - Usage                                                 |conn-manager-usage|
+  - Commands                                           |conn-manager-commands|
+  - Default Keymaps                             |conn-manager-default-keymaps|
+  - Default Configuration                 |conn-manager-default-configuration|
+  - Example Configuration                 |conn-manager-example-configuration|
+  - Highlight Groups                           |conn-manager-highlight-groups|
+  - Menu Support                                   |conn-manager-menu-support|
+  - Attention                                         |conn-manager-attention|
 
 ==============================================================================
 1. conn-manager.nvim                          *conn-manager-conn-manager.nvim*
@@ -21,12 +22,19 @@ Table of Contents                             *conn-manager-table-of-contents*
 A ssh connections manager for neovim.
 
 
-SCREENSHOT                         *conn-manager-conn-manager.nvim-screenshot*
+SCREENSHOT                                           *conn-manager-screenshot*
 
 
 
 
-SETUP                                   *conn-manager-conn-manager.nvim-setup*
+REQUIREMENTS                                       *conn-manager-requirements*
+
+- neovim >= 0.10.0
+- ssh client (ie. `ssh` command)
+- jq (optional)
+
+
+SETUP                                                     *conn-manager-setup*
 
 Example setup for lazy.nvim
 
@@ -52,24 +60,24 @@ Example setup for lazy.nvim
 <
 
 
-USAGE                                   *conn-manager-conn-manager.nvim-usage*
+USAGE                                                     *conn-manager-usage*
 
 Run `:ConnManager` in neovim, and press `a` to start. Press `?` for keymaps
 help.
 
 
-COMMANDS                             *conn-manager-conn-manager.nvim-commands*
+COMMANDS                                               *conn-manager-commands*
 
 `:ConnManager [open|close|toggle]`
 
 
-DEFAULT KEYMAPS               *conn-manager-conn-manager.nvim-default-keymaps*
+DEFAULT KEYMAPS                                 *conn-manager-default-keymaps*
 
 You can press `?` to open keymaps help window in `ConnManager` buffer. Read
 `setup_keymaps` function in `lua/conn-manager/init.lua` for detail.
 
 
-DEFAULT CONFIGURATION   *conn-manager-conn-manager.nvim-default-configuration*
+DEFAULT CONFIGURATION                     *conn-manager-default-configuration*
 
 >lua
     {
@@ -120,7 +128,7 @@ DEFAULT CONFIGURATION   *conn-manager-conn-manager.nvim-default-configuration*
 <
 
 
-EXAMPLE CONFIGURATION   *conn-manager-conn-manager.nvim-example-configuration*
+EXAMPLE CONFIGURATION                     *conn-manager-example-configuration*
 
 lua/plugins/conn-manager.lua ~
 
@@ -238,7 +246,7 @@ lua/plugins/conn-manager.lua ~
 <
 
 
-HIGHLIGHT GROUPS             *conn-manager-conn-manager.nvim-highlight-groups*
+HIGHLIGHT GROUPS                               *conn-manager-highlight-groups*
 
 >lua
       vim.api.nvim_set_hl(0, 'ConnManagerFolder', { link = 'Directory', default = true })
@@ -249,7 +257,7 @@ HIGHLIGHT GROUPS             *conn-manager-conn-manager.nvim-highlight-groups*
 <
 
 
-MENU SUPPORT                     *conn-manager-conn-manager.nvim-menu-support*
+MENU SUPPORT                                       *conn-manager-menu-support*
 
 Install menu <https://github.com/nvzone/menu> and add this configuration.lua/menus/conn-manager.lua ~
 
@@ -325,7 +333,7 @@ Install menu <https://github.com/nvzone/menu> and add this configuration.lua/men
 <
 
 
-ATTENTION                           *conn-manager-conn-manager.nvim-attention*
+ATTENTION                                             *conn-manager-attention*
 
 The password is stored in plain text in neovim, and the security needs to be
 ensured by yourself.
