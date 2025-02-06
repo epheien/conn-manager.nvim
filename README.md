@@ -4,6 +4,11 @@ A ssh connections manager for neovim.
 ## Screenshot
 <img width="1022" alt="Image" src="https://github.com/user-attachments/assets/41c9c586-390d-4cb4-8d0b-6954e0eece2c" />
 
+## Requirements
+- neovim >= 0.10.0
+- ssh client (ie. `ssh` command)
+- jq (optional)
+
 ## Setup
 Example setup for lazy.nvim
 ```lua
