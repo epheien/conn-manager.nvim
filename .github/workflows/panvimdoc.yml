@@ -16,6 +16,7 @@ jobs:
         with:
           vimdoc: conn-manager
           version: "NVIM v0.10.0"
+          dedupsubheadings: false
       - name: Strip last change date
         run: sed -E '1s_\s+Last.*__' -i doc/conn-manager.txt
       - uses: stefanzweifel/git-auto-commit-action@v4
