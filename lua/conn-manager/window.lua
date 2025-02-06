@@ -17,11 +17,10 @@ function M.buf_in_win_count(buf_nr)
 end
 
 ---检测窗口是否可用(这个窗口可替换为其他缓冲区)
----@param winnr integer
+---@param winid integer
 ---@return boolean
-function M.is_window_usable(winnr)
-  local winid = vim.fn.win_getid(winnr)
-  if winnr <= 0 or winid == 0 or not vim.api.nvim_win_is_valid(winid) then
+function M.is_window_usable(winid)
+  if not vim.api.nvim_win_is_valid(winid) then
     return false
   end
   local bufnr = vim.fn.winbufnr(winid)
@@ -52,7 +51,7 @@ function M.get_first_usable_winnr()
   local i = 1
   local last_winnr = vim.fn.winnr('$')
   while i <= last_winnr do
-    if M.is_window_usable(i) then
+    if M.is_window_usable(vim.fn.win_getid(i)) then
       return i
     end
     i = i + 1
@@ -86,7 +85,7 @@ end
 ---@return integer
 function M.pick_window_for_node_open(split)
   local prev_winnr = vim.fn.winnr('#')
-  if M.is_window_usable(prev_winnr) then
+  if M.is_window_usable(vim.fn.win_getid(prev_winnr)) then
     return vim.fn.win_getid(prev_winnr)
   end
   local winnr = M.get_first_usable_winnr()
