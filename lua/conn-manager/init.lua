@@ -302,6 +302,10 @@ function M.refresh_node(node)
   if not node then
     return
   end
+  local win = get_win()
+  if not vim.api.nvim_win_is_valid(win) then
+    return
+  end
 
   local lnum = 0
   if get_node() == node then
@@ -318,7 +322,6 @@ function M.refresh_node(node)
     end
   end
 
-  local win = get_win()
   local msgs = node:render(node:get_depth() - 1)
   local bufnr = vim.api.nvim_win_get_buf(win)
   local pos = vim.api.nvim_win_get_cursor(win)
