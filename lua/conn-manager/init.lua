@@ -165,6 +165,7 @@ local function setup_keymaps(bufnr)
     return vim.tbl_deep_extend('force', {
       desc = desc,
       buffer = bufnr,
+      nowait = true,
     }, o or {})
   end
   vim.keymap.set('n', '<CR>', M.open, opts('Open'))
