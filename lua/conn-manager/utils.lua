@@ -115,7 +115,10 @@ function M.overlay_input(opts, on_confirm)
   vim.keymap.set('i', '<Esc>', function() confirm(true) end, o)
   vim.api.nvim_create_autocmd({ 'WinLeave', 'InsertLeave' }, {
     buffer = bufnr,
-    callback = function() vim.api.nvim_win_close(winid, false) end,
+    callback = function()
+      vim.api.nvim_win_close(winid, false)
+      vim.cmd.stopinsert()
+    end,
   })
   vim.api.nvim_feedkeys('A', 'n', false)
 end
