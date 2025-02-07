@@ -4,7 +4,7 @@
 Table of Contents                             *conn-manager-table-of-contents*
 
 1. conn-manager.nvim                          |conn-manager-conn-manager.nvim|
-  - Screenshot                                       |conn-manager-screenshot|
+  - Demo and Screenshot                     |conn-manager-demo-and-screenshot|
   - Requirements                                   |conn-manager-requirements|
   - Setup                                                 |conn-manager-setup|
   - Usage                                                 |conn-manager-usage|
@@ -22,7 +22,10 @@ Table of Contents                             *conn-manager-table-of-contents*
 A ssh connections manager for neovim.
 
 
-SCREENSHOT                                           *conn-manager-screenshot*
+DEMO AND SCREENSHOT                         *conn-manager-demo-and-screenshot*
+
+
+https://github.com/user-attachments/assets/bc893903-0274-4d18-94be-8d520724fca7
 
 
 
