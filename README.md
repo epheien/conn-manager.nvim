@@ -1,7 +1,10 @@
 # conn-manager.nvim
 A ssh connections manager for neovim.
 
-## Screenshot
+## Demo and Screenshot
+
+https://github.com/user-attachments/assets/bc893903-0274-4d18-94be-8d520724fca7
+
 <img width="1022" alt="Image" src="https://github.com/user-attachments/assets/41c9c586-390d-4cb4-8d0b-6954e0eece2c" />
 
 ## Requirements
