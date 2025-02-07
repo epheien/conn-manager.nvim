@@ -16,6 +16,7 @@ jobs:
         with:
           vimdoc: conn-manager
           version: "NVIM v0.10.0"
+          titledatepattern: "%Y-%m-%d"
           dedupsubheadings: false
       - uses: stefanzweifel/git-auto-commit-action@v4
         with:
