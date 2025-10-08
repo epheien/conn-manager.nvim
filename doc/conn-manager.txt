@@ -1,4 +1,4 @@
-*conn-manager.txt*        For NVIM v0.10.0       Last change: 2025 February 07
+*conn-manager.txt*           For NVIM v0.10.0          Last change: 2025-10-08
 
 ==============================================================================
 Table of Contents                             *conn-manager-table-of-contents*
@@ -363,7 +363,7 @@ Install menu <https://github.com/nvzone/menu> and add this configuration.lua/men
       {
         name = '  Paste before node',
         cmd = function() require('conn-manager').paste_node(true) end,
-        rtxt = 'p',
+        rtxt = 'P',
       },
     }
 <
